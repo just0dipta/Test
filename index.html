@@ -1,5 +1,4 @@
-
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -263,6 +262,7 @@
 <div id="app">
   <!-- Hub list -->
   <div id="hubList" aria-label="People list">
+    Loading people...
   </div>
   <!-- Detail and rating view -->
   <div id="detailView" aria-label="Person detail and rating form">
@@ -280,7 +280,7 @@
         <!-- stars inserted by JS -->
       </div>
       <label for="reviewText">Add your review:</label>
-      <textarea id="reviewText" name="reviewText" placeholder="Write your review here..." rows="3"></textarea>
+      <textarea id="reviewText" name="reviewText" placeholder="Write your review here..." rows="3" required></textarea>
       <button type="submit" id="submitBtn" disabled>Submit Rating</button>
     </form>
     <div id="reviewsList" aria-live="polite" aria-label="Reviews list">
@@ -289,36 +289,8 @@
   </div>
 </div>
 <script>
-  // Sample people data including photo URLs (placeholder images)
-  const people = [
-    {
-      id: '1',
-      name: 'Alice Johnson',
-      description: 'Creative graphic designer who loves nature and vintage cars.',
-      photo: 'https://randomuser.me/api/portraits/women/44.jpg',
-    },
-    {
-      id: '2',
-      name: 'Mark Thompson',
-      description: 'Enthusiastic software engineer and coffee enthusiast.',
-      photo: 'https://randomuser.me/api/portraits/men/46.jpg',
-    },
-    {
-      id: '3',
-      name: 'Sofia Martinez',
-      description: 'Passionate teacher who inspires children to love learning.',
-      photo: 'https://randomuser.me/api/portraits/women/68.jpg',
-    },
-    {
-      id: '4',
-      name: 'James Lee',
-      description: 'Musician, songwriter, and world traveler.',
-      photo: 'https://randomuser.me/api/portraits/men/52.jpg',
-    }
-  ];
-
-  // Local Storage keys
-  const STORAGE_KEY = 'peopleRatings';
+  // API base URL - adjust if hosted elsewhere or port differs
+  const API_BASE = 'http://localhost:3000';
 
   // Elements
   const hubList = document.getElementById('hubList');
@@ -333,21 +305,54 @@
   const reviewsList = document.getElementById('reviewsList');
   const ratingForm = document.getElementById('ratingForm');
 
+  let people = [];
   let selectedPerson = null;
   let currentRating = 0;
 
-  // Load existing ratings from localStorage or initialize
-  function loadRatings() {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : {};
+  // Fetch people from backend
+  async function loadPeople() {
+    try {
+      const response = await fetch(`${API_BASE}/people`);
+      if (!response.ok) throw new Error('Failed to load people');
+      return await response.json();
+    } catch (e) {
+      alert('Error loading people: ' + e.message);
+      return [];
+    }
   }
 
-  // Save ratings to localStorage
-  function saveRatings(ratings) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(ratings));
+  // Fetch ratings for a person from backend
+  async function loadRatings(personId) {
+    try {
+      const response = await fetch(`${API_BASE}/people/${personId}/ratings`);
+      if (!response.ok) throw new Error('Failed to load ratings');
+      return await response.json();
+    } catch (e) {
+      alert('Error loading ratings: ' + e.message);
+      return [];
+    }
   }
 
-  // Calculate average rating for a person
+  // Submit rating to backend
+  async function submitRating(personId, stars, review) {
+    try {
+      const response = await fetch(`${API_BASE}/people/${personId}/ratings`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({stars, review})
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to submit rating');
+      }
+      return await response.json();
+    } catch (e) {
+      alert('Error submitting rating: ' + e.message);
+      return null;
+    }
+  }
+
+  // Calculate average rating for given array of ratings
   function averageRating(ratings) {
     if (!ratings || ratings.length === 0) return 0;
     const sum = ratings.reduce((acc, r) => acc + r.stars, 0);
@@ -357,24 +362,24 @@
   // Create star elements for rating display
   function createStarElements(rating, max = 5, small = false) {
     const stars = [];
-    const starClass = small ? 'star-rating-small' : '';
     let fullStars = Math.floor(rating);
-    let halfStar = rating - fullStars >= 0.5;
-
     for (let i = 1; i <= max; i++) {
       const star = document.createElement('span');
-      star.className = starClass;
+      star.className = small ? 'star-rating-small' : '';
       star.textContent = i <= fullStars ? '★' : '☆';
       stars.push(star);
     }
     return stars;
   }
 
-  // Render the hub list of people
-  function renderHub() {
-    const ratings = loadRatings();
+  // Render the hub list of people with average rating (fetched ratings)
+  async function renderHub() {
     hubList.innerHTML = '';
-    people.forEach(person => {
+    for (let person of people) {
+      // Load ratings for the person from backend
+      const ratings = await loadRatings(person.id);
+      const avg = averageRating(ratings);
+
       const card = document.createElement('div');
       card.className = 'person-card';
       card.tabIndex = 0;
@@ -389,14 +394,12 @@
         }
       });
 
-      // photo
       const img = document.createElement('img');
       img.src = person.photo;
       img.alt = `Photo of ${person.name}`;
       img.className = 'person-photo';
       card.appendChild(img);
 
-      // info container
       const info = document.createElement('div');
       info.className = 'person-info';
 
@@ -410,23 +413,21 @@
       desc.textContent = person.description;
       info.appendChild(desc);
 
-      // average rating stars and number
-      const ratingValue = ratings[person.id] ? averageRating(ratings[person.id]) : 0;
       const starContainer = document.createElement('div');
       starContainer.className = 'star-rating-small';
-      const stars = createStarElements(ratingValue, 5, true);
+      const stars = createStarElements(avg, 5, true);
       stars.forEach(star => starContainer.appendChild(star));
-      if (ratingValue > 0) {
+      if (avg > 0) {
         const avgNumber = document.createElement('span');
         avgNumber.className = 'average-rating-number';
-        avgNumber.textContent = ratingValue.toFixed(1);
+        avgNumber.textContent = avg.toFixed(1);
         starContainer.appendChild(avgNumber);
       }
       info.appendChild(starContainer);
 
       card.appendChild(info);
       hubList.appendChild(card);
-    });
+    }
   }
 
   // Render stars for input in detail view
@@ -440,13 +441,10 @@
       star.setAttribute('aria-label', `${i} star${i > 1 ? 's' : ''}`);
       star.setAttribute('tabindex', '0');
       star.dataset.value = i;
-
-      // Click handling
       star.addEventListener('click', () => {
         currentRating = i;
         updateStarInput();
       });
-      // keyboard access for stars
       star.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -483,25 +481,10 @@
     updateStarInput();
   }
 
-  // Render the detail view for selected person
-  function renderDetail(id) {
-    selectedPerson = people.find(p => p.id === id);
-    if (!selectedPerson) return;
-
-    detailPhoto.src = selectedPerson.photo;
-    detailPhoto.alt = `Photo of ${selectedPerson.name}`;
-    detailName.textContent = selectedPerson.name;
-    detailDescription.textContent = selectedPerson.description;
-    clearForm();
-    renderReviews();
-  }
-
   // Render all reviews for the selected person
-  function renderReviews() {
+  function renderReviews(ratings) {
     reviewsList.innerHTML = '';
-    const ratings = loadRatings();
-    const personRatings = ratings[selectedPerson.id] || [];
-    if (personRatings.length === 0) {
+    if (!ratings || ratings.length === 0) {
       const noReview = document.createElement('p');
       noReview.textContent = 'No ratings yet. Be the first to rate!';
       noReview.style.color = '#ffffffa0';
@@ -509,7 +492,7 @@
       reviewsList.appendChild(noReview);
       return;
     }
-    personRatings.slice().reverse().forEach(review => {
+    ratings.forEach(review => {
       const revItem = document.createElement('div');
       revItem.className = 'review-item';
 
@@ -524,7 +507,7 @@
 
       const reviewTextEl = document.createElement('div');
       reviewTextEl.className = 'review-text';
-      reviewTextEl.textContent = review.text;
+      reviewTextEl.textContent = review.review || review.text || '';
       revItem.appendChild(reviewTextEl);
 
       reviewsList.appendChild(revItem);
@@ -532,8 +515,16 @@
   }
 
   // Open detail view for person id
-  function openDetail(id) {
-    renderDetail(id);
+  async function openDetail(id) {
+    selectedPerson = people.find(p => p.id === id);
+    if (!selectedPerson) return;
+    detailPhoto.src = selectedPerson.photo;
+    detailPhoto.alt = `Photo of ${selectedPerson.name}`;
+    detailName.textContent = selectedPerson.name;
+    detailDescription.textContent = selectedPerson.description;
+    clearForm();
+    const ratings = await loadRatings(id);
+    renderReviews(ratings);
     hubList.style.display = 'none';
     detailView.style.display = 'flex';
     detailView.scrollTop = 0;
@@ -550,31 +541,38 @@
   reviewText.addEventListener('input', validateForm);
 
   // Submit rating form handler
-  ratingForm.addEventListener('submit', (e) => {
+  ratingForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!selectedPerson) return;
     if (currentRating === 0 || reviewText.value.trim() === '') return;
 
-    let ratings = loadRatings();
-    if (!ratings[selectedPerson.id]) ratings[selectedPerson.id] = [];
-
-    ratings[selectedPerson.id].push({
-      stars: currentRating,
-      text: reviewText.value.trim()
-    });
-    saveRatings(ratings);
-    clearForm();
-    renderReviews();
-    renderHub(); // update averages on hub too
-    alert('Thank you for your rating!');
+    const result = await submitRating(selectedPerson.id, currentRating, reviewText.value.trim());
+    if (result) {
+      alert('Thank you for your rating!');
+      clearForm();
+      const ratings = await loadRatings(selectedPerson.id);
+      renderReviews(ratings);
+      await renderHub(); // refresh hub to update averages
+    }
   });
 
-  // Initial render
-  renderHub();
-  renderStarInput();
+  // Initialize app
+  async function init() {
+    people = await loadPeople();
+    if (people.length === 0) {
+      hubList.textContent = 'No people found.';
+    } else {
+      await renderHub();
+    }
+    renderStarInput();
+  }
+
+  init();
+
 </script>
 </body>
 </html>
 </content>
 </create_file>
 
+ 
