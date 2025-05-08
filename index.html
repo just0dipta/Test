@@ -1,174 +1,580 @@
-<!DOCTYPE html>
+
+ <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>Personal Review App</title>
+<title>People Rating Hub</title>
 <style>
   /* Reset and base */
   * {
     box-sizing: border-box;
   }
   body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
-    padding: 0 1rem;
-    background: #f9faff;
-    color: #333;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    min-height: 600px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-height: 100vh;
-    max-width: 350px;
-    margin-left: auto;
-    margin-right: auto;
+    overflow: hidden;
   }
-  header {
-    margin: 2rem 0 1rem;
-    text-align: center;
-  }
-  header h1 {
+  h1 {
+    margin: 1rem 0 0.5rem 0;
     font-weight: 700;
-    font-size: 1.6rem;
-    color: #004aad;
+    text-align: center;
+    font-size: 1.8rem;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.45);
   }
-  form {
+  #app {
     width: 100%;
-    margin-bottom: 1.5rem;
+    max-width: 350px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 16px;
+    padding: 0.5rem 0.75rem 1.2rem 0.75rem;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    flex-grow: 1;
     display: flex;
     flex-direction: column;
   }
-  textarea {
-    resize: none;
-    height: 100px;
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
-    border-radius: 10px;
-    border: 1.8px solid #004aad;
-    outline-offset: 2px;
-    outline-color: #004aad;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    font-family: inherit;
+  /* Hub list */
+  #hubList {
+    overflow-y: auto;
+    padding: 0.5rem 0;
+    flex-grow: 1;
   }
-  textarea:focus {
-    border-color: #1a73e8;
-    box-shadow: 0 0 6px #1a73e8aa;
-  }
-  button {
-    margin-top: 1rem;
-    background-color: #004aad;
-    color: white;
-    border: none;
-    padding: 0.8rem 1rem;
-    font-size: 1.1rem;
-    font-weight: 700;
+  .person-card {
+    background: rgba(255,255,255,0.12);
     border-radius: 12px;
+    margin-bottom: 1rem;
     cursor: pointer;
+    display: flex;
+    gap: 12px;
+    padding: 10px 12px;
+    align-items: center;
+    transition: background-color 0.25s ease;
+  }
+  .person-card:hover {
+    background: rgba(255,255,255,0.2);
+  }
+  .person-photo {
+    flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  }
+  .person-info {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .person-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 0.2rem;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+  .person-description {
+    font-size: 0.85rem;
+    color: #dcdcdccc;
+    margin-bottom: 0.3rem;
+    line-height: 1.2em;
+  }
+  .star-rating-small {
+    color: #f6c90e;
+    font-size: 1rem;
+    user-select: none;
+    display: flex;
+    align-items: center;
+  }
+  .average-rating-number {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-left: 4px;
+    color: #ffeb7b;
+    text-shadow: 0 0 4px #dcc90e88;
+  }
+  /* Detail view */
+  #detailView {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
+    padding-bottom: 8px;
+  }
+  #detailHeader {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 0.8rem;
+  }
+  #detailPhoto {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    flex-shrink: 0;
+  }
+  #detailNameDesc {
+    flex-grow: 1;
+  }
+  #detailName {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.15rem;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  }
+  #detailDescription {
+    font-size: 1rem;
+    color: #ddddeecc;
+    line-height: 1.3em;
+  }
+  #backButton {
+    background: transparent;
+    border: 2px solid #f6c90e;
+    color: #f6c90e;
+    padding: 4px 12px;
+    border-radius: 24px;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.25s ease;
+    flex-shrink: 0;
+  }
+  #backButton:hover {
+    background: #f6c90e;
+    color: #512b01;
+  }
+  /* Rating form */
+  #ratingForm {
+    margin-top: 0.5rem;
+    background: rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 0.8rem 1rem;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.15);
+  }
+  #ratingForm label {
+    font-weight: 600;
+    color: #fffddf;
+    display: block;
+    margin-bottom: 0.2rem;
+    font-size: 1rem;
+  }
+  .star-rating-input {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+    font-size: 1.8rem;
+  }
+  .star {
+    cursor: pointer;
+    color: #aaaabbdd;
+    transition: color 0.3s ease;
+    user-select: none;
+  }
+  .star.filled {
+    color: #ffce00;
+    text-shadow: 0 0 8px #ffd700cc;
+  }
+  #reviewText {
+    width: 100%;
+    min-height: 60px;
+    border-radius: 10px;
+    border: none;
+    padding: 8px 12px;
+    font-size: 1rem;
+    resize: vertical;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  #reviewText:focus {
+    outline: 2px solid #f6c90e;
+    background: #fff7a9cc;
+  }
+  #submitBtn {
+    background: #f6c90e;
+    border: none;
+    border-radius: 20px;
+    color: #512b01;
+    font-weight: 700;
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    margin-top: 10px;
+    width: 100%;
+    box-shadow: 0 3px 5px rgba(246,201,14,0.75);
     transition: background-color 0.3s ease;
   }
-  button:hover, button:focus {
-    background-color: #003780;
+  #submitBtn:hover:not(:disabled) {
+    background: #e0b400;
   }
-  .reviews-container {
-    width: 100%;
-    max-height: 350px;
+  #submitBtn:disabled {
+    background: #999966;
+    cursor: not-allowed;
+  }
+  /* Reviews displayed */
+  #reviewsList {
+    margin-top: 1rem;
+    max-height: 240px;
     overflow-y: auto;
-    background: white;
-    box-shadow: 0 0 10px #c0c7d3;
-    border-radius: 12px;
-    padding: 1rem;
+    padding-right: 6px;
   }
   .review-item {
-    background-color: #e8f0fe;
+    background: rgba(255,255,255,0.15);
+    padding: 8px 12px;
     border-radius: 12px;
-    padding: 0.9rem 1rem;
-    margin-bottom: 1rem;
-    font-size: 1rem;
-    white-space: pre-wrap;
-    box-shadow: inset 0 2px 4px #bad1ff;
+    margin-bottom: 12px;
+    box-shadow: 0 0 6px rgba(0,0,0,0.2);
   }
-  @media (max-width: 400px) {
-    body {
-      padding: 0 0.75rem;
-      max-width: 100vw;
-    }
+  .review-stars {
+    color: #ffd600;
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+  }
+  .review-text {
+    font-size: 0.95rem;
+    color: #fafafa;
+    line-height: 1.3em;
+    white-space: pre-wrap;
+  }
+  /* Scrollbar for lists */
+  #hubList::-webkit-scrollbar, #reviewsList::-webkit-scrollbar, #detailView::-webkit-scrollbar {
+    width: 6px;
+  }
+  #hubList::-webkit-scrollbar-thumb,
+  #reviewsList::-webkit-scrollbar-thumb,
+  #detailView::-webkit-scrollbar-thumb {
+    background-color: rgba(255,255,255,0.25);
+    border-radius: 3px;
+  }
+  #hubList::-webkit-scrollbar-track,
+  #reviewsList::-webkit-scrollbar-track,
+  #detailView::-webkit-scrollbar-track {
+    background: transparent;
   }
 </style>
 </head>
 <body>
-<header>
-  <h1>Personal Review</h1>
-</header>
-<form id="reviewForm" autocomplete="off">
-  <label for="reviewInput" class="sr-only">Enter your review</label>
-  <textarea id="reviewInput" placeholder="Write your review here..." required minlength="3"></textarea>
-  <button type="submit">Save Review</button>
-</form>
-<section class="reviews-container" id="reviewsContainer" aria-live="polite" aria-relevant="additions">
-  <!-- Reviews will appear here -->
-</section>
-
+<h1>People Rating Hub</h1>
+<div id="app">
+  <!-- Hub list -->
+  <div id="hubList" aria-label="People list">
+  </div>
+  <!-- Detail and rating view -->
+  <div id="detailView" aria-label="Person detail and rating form">
+    <div id="detailHeader">
+      <button id="backButton" aria-label="Back to people hub">&larr; Back</button>
+      <img id="detailPhoto" alt="Person photo" src="" />
+      <div id="detailNameDesc">
+        <h2 id="detailName"></h2>
+        <p id="detailDescription"></p>
+      </div>
+    </div>
+    <form id="ratingForm" aria-label="Rating form">
+      <label for="starInput">Rate with stars:</label>
+      <div class="star-rating-input" id="starInput" role="radiogroup" aria-label="Star rating">
+        <!-- stars inserted by JS -->
+      </div>
+      <label for="reviewText">Add your review:</label>
+      <textarea id="reviewText" name="reviewText" placeholder="Write your review here..." rows="3"></textarea>
+      <button type="submit" id="submitBtn" disabled>Submit Rating</button>
+    </form>
+    <div id="reviewsList" aria-live="polite" aria-label="Reviews list">
+      <!-- reviews inserted here -->
+    </div>
+  </div>
+</div>
 <script>
-  const reviewForm = document.getElementById('reviewForm');
-  const reviewInput = document.getElementById('reviewInput');
-  const reviewsContainer = document.getElementById('reviewsContainer');
-  const STORAGE_KEY = 'personalReviews';
+  // Sample people data including photo URLs (placeholder images)
+  const people = [
+    {
+      id: '1',
+      name: 'Alice Johnson',
+      description: 'Creative graphic designer who loves nature and vintage cars.',
+      photo: 'https://randomuser.me/api/portraits/women/44.jpg',
+    },
+    {
+      id: '2',
+      name: 'Mark Thompson',
+      description: 'Enthusiastic software engineer and coffee enthusiast.',
+      photo: 'https://randomuser.me/api/portraits/men/46.jpg',
+    },
+    {
+      id: '3',
+      name: 'Sofia Martinez',
+      description: 'Passionate teacher who inspires children to love learning.',
+      photo: 'https://randomuser.me/api/portraits/women/68.jpg',
+    },
+    {
+      id: '4',
+      name: 'James Lee',
+      description: 'Musician, songwriter, and world traveler.',
+      photo: 'https://randomuser.me/api/portraits/men/52.jpg',
+    }
+  ];
 
-  function loadReviews() {
-    let reviews = [];
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        reviews = JSON.parse(saved);
+  // Local Storage keys
+  const STORAGE_KEY = 'peopleRatings';
+
+  // Elements
+  const hubList = document.getElementById('hubList');
+  const detailView = document.getElementById('detailView');
+  const detailPhoto = document.getElementById('detailPhoto');
+  const detailName = document.getElementById('detailName');
+  const detailDescription = document.getElementById('detailDescription');
+  const backButton = document.getElementById('backButton');
+  const starInput = document.getElementById('starInput');
+  const reviewText = document.getElementById('reviewText');
+  const submitBtn = document.getElementById('submitBtn');
+  const reviewsList = document.getElementById('reviewsList');
+  const ratingForm = document.getElementById('ratingForm');
+
+  let selectedPerson = null;
+  let currentRating = 0;
+
+  // Load existing ratings from localStorage or initialize
+  function loadRatings() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : {};
+  }
+
+  // Save ratings to localStorage
+  function saveRatings(ratings) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ratings));
+  }
+
+  // Calculate average rating for a person
+  function averageRating(ratings) {
+    if (!ratings || ratings.length === 0) return 0;
+    const sum = ratings.reduce((acc, r) => acc + r.stars, 0);
+    return sum / ratings.length;
+  }
+
+  // Create star elements for rating display
+  function createStarElements(rating, max = 5, small = false) {
+    const stars = [];
+    const starClass = small ? 'star-rating-small' : '';
+    let fullStars = Math.floor(rating);
+    let halfStar = rating - fullStars >= 0.5;
+
+    for (let i = 1; i <= max; i++) {
+      const star = document.createElement('span');
+      star.className = starClass;
+      star.textContent = i <= fullStars ? '★' : '☆';
+      stars.push(star);
+    }
+    return stars;
+  }
+
+  // Render the hub list of people
+  function renderHub() {
+    const ratings = loadRatings();
+    hubList.innerHTML = '';
+    people.forEach(person => {
+      const card = document.createElement('div');
+      card.className = 'person-card';
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', `View and rate ${person.name}`);
+
+      card.addEventListener('click', () => openDetail(person.id));
+      card.addEventListener('keypress', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openDetail(person.id);
+        }
+      });
+
+      // photo
+      const img = document.createElement('img');
+      img.src = person.photo;
+      img.alt = `Photo of ${person.name}`;
+      img.className = 'person-photo';
+      card.appendChild(img);
+
+      // info container
+      const info = document.createElement('div');
+      info.className = 'person-info';
+
+      const name = document.createElement('div');
+      name.className = 'person-name';
+      name.textContent = person.name;
+      info.appendChild(name);
+
+      const desc = document.createElement('div');
+      desc.className = 'person-description';
+      desc.textContent = person.description;
+      info.appendChild(desc);
+
+      // average rating stars and number
+      const ratingValue = ratings[person.id] ? averageRating(ratings[person.id]) : 0;
+      const starContainer = document.createElement('div');
+      starContainer.className = 'star-rating-small';
+      const stars = createStarElements(ratingValue, 5, true);
+      stars.forEach(star => starContainer.appendChild(star));
+      if (ratingValue > 0) {
+        const avgNumber = document.createElement('span');
+        avgNumber.className = 'average-rating-number';
+        avgNumber.textContent = ratingValue.toFixed(1);
+        starContainer.appendChild(avgNumber);
       }
-    } catch(e) {
-      console.error('Failed to load saved reviews', e);
-    }
-    return reviews;
+      info.appendChild(starContainer);
+
+      card.appendChild(info);
+      hubList.appendChild(card);
+    });
   }
 
-  function saveReviews(reviews) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(reviews));
-    } catch(e) {
-      console.error('Failed to save reviews', e);
+  // Render stars for input in detail view
+  function renderStarInput() {
+    starInput.innerHTML = '';
+    for (let i = 1; i <= 5; i++) {
+      const star = document.createElement('span');
+      star.className = 'star';
+      star.textContent = '☆';
+      star.setAttribute('role', 'radio');
+      star.setAttribute('aria-label', `${i} star${i > 1 ? 's' : ''}`);
+      star.setAttribute('tabindex', '0');
+      star.dataset.value = i;
+
+      // Click handling
+      star.addEventListener('click', () => {
+        currentRating = i;
+        updateStarInput();
+      });
+      // keyboard access for stars
+      star.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          currentRating = i;
+          updateStarInput();
+        }
+      });
+      starInput.appendChild(star);
     }
+    updateStarInput();
   }
 
-  function renderReviews() {
-    const reviews = loadReviews();
-    reviewsContainer.innerHTML = '';
-    if (reviews.length === 0) {
-      reviewsContainer.innerHTML = '<p style="color:#777;text-align:center;">No reviews saved yet.</p>';
-      return;
-    }
-    for (const review of reviews) {
-      const div = document.createElement('div');
-      div.className = 'review-item';
-      div.textContent = review;
-      reviewsContainer.appendChild(div);
-    }
+  // Update the visual fill of star input
+  function updateStarInput() {
+    const stars = starInput.querySelectorAll('.star');
+    stars.forEach(star => {
+      star.classList.toggle('filled', parseInt(star.dataset.value) <= currentRating);
+      star.textContent = star.classList.contains('filled') ? '★' : '☆';
+    });
+    validateForm();
   }
 
-  reviewForm.addEventListener('submit', e => {
-    e.preventDefault();
-    const reviewText = reviewInput.value.trim();
-    if (reviewText.length < 3) {
-      alert('Please enter at least 3 characters for your review.');
-      return;
-    }
-    const reviews = loadReviews();
-    reviews.unshift(reviewText);
-    saveReviews(reviews);
+  // Validate form to enable submit button if valid
+  function validateForm() {
+    const hasRating = currentRating > 0;
+    const reviewLen = reviewText.value.trim().length > 0;
+    submitBtn.disabled = !(hasRating && reviewLen);
+  }
+
+  // Clear rating form inputs
+  function clearForm() {
+    currentRating = 0;
+    reviewText.value = '';
+    updateStarInput();
+  }
+
+  // Render the detail view for selected person
+  function renderDetail(id) {
+    selectedPerson = people.find(p => p.id === id);
+    if (!selectedPerson) return;
+
+    detailPhoto.src = selectedPerson.photo;
+    detailPhoto.alt = `Photo of ${selectedPerson.name}`;
+    detailName.textContent = selectedPerson.name;
+    detailDescription.textContent = selectedPerson.description;
+    clearForm();
     renderReviews();
-    reviewInput.value = '';
-    reviewInput.focus();
+  }
+
+  // Render all reviews for the selected person
+  function renderReviews() {
+    reviewsList.innerHTML = '';
+    const ratings = loadRatings();
+    const personRatings = ratings[selectedPerson.id] || [];
+    if (personRatings.length === 0) {
+      const noReview = document.createElement('p');
+      noReview.textContent = 'No ratings yet. Be the first to rate!';
+      noReview.style.color = '#ffffffa0';
+      noReview.style.fontStyle = 'italic';
+      reviewsList.appendChild(noReview);
+      return;
+    }
+    personRatings.slice().reverse().forEach(review => {
+      const revItem = document.createElement('div');
+      revItem.className = 'review-item';
+
+      const starSpan = document.createElement('div');
+      starSpan.className = 'review-stars';
+      let starsText = '';
+      for (let i = 1; i <= 5; i++) {
+        starsText += i <= review.stars ? '★' : '☆';
+      }
+      starSpan.textContent = starsText;
+      revItem.appendChild(starSpan);
+
+      const reviewTextEl = document.createElement('div');
+      reviewTextEl.className = 'review-text';
+      reviewTextEl.textContent = review.text;
+      revItem.appendChild(reviewTextEl);
+
+      reviewsList.appendChild(revItem);
+    });
+  }
+
+  // Open detail view for person id
+  function openDetail(id) {
+    renderDetail(id);
+    hubList.style.display = 'none';
+    detailView.style.display = 'flex';
+    detailView.scrollTop = 0;
+  }
+
+  // Back to hub list
+  backButton.addEventListener('click', () => {
+    selectedPerson = null;
+    hubList.style.display = 'block';
+    detailView.style.display = 'none';
   });
 
-  // Initial render on page load
-  renderReviews();
+  // Enable/disable submit on input changes
+  reviewText.addEventListener('input', validateForm);
+
+  // Submit rating form handler
+  ratingForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!selectedPerson) return;
+    if (currentRating === 0 || reviewText.value.trim() === '') return;
+
+    let ratings = loadRatings();
+    if (!ratings[selectedPerson.id]) ratings[selectedPerson.id] = [];
+
+    ratings[selectedPerson.id].push({
+      stars: currentRating,
+      text: reviewText.value.trim()
+    });
+    saveRatings(ratings);
+    clearForm();
+    renderReviews();
+    renderHub(); // update averages on hub too
+    alert('Thank you for your rating!');
+  });
+
+  // Initial render
+  renderHub();
+  renderStarInput();
 </script>
 </body>
 </html>
 </content>
 </create_file>
+
