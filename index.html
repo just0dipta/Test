@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
-  <title>Voting People PWA</title>
+  <title>Vote With Stars</title>
 
   <!-- Manifest -->
   <link rel="manifest" href="manifest.json" />
@@ -177,7 +177,7 @@
     }
   </style>
 
-  <!-- Manifest defined inline here for demonstration, but also linked externally for PWA -->
+  <!-- Manifest defined externally for PWA -->
   <link rel="manifest" href="manifest.json" />
 
 </head>
@@ -310,13 +310,13 @@
       const emptyStars = '☆'.repeat(5 - vote.rating);
       const safeDesc = vote.description.replace(/</g, '&lt;').replace(/>/g, '&gt;');
       const dateStr = new Date(vote.timestamp).toLocaleString();
-      return `
+      return \`
         <article class="vote-item" tabindex="0">
-          <div class="vote-stars" aria-label="Rating: ${vote.rating} out of 5 stars">${fullStars}${emptyStars}</div>
-          <p class="vote-desc">${safeDesc}</p>
-          <time datetime="${new Date(vote.timestamp).toISOString()}" style="font-size:0.8rem;color:#666;">${dateStr}</time>
+          <div class="vote-stars" aria-label="Rating: \${vote.rating} out of 5 stars">\${fullStars}\${emptyStars}</div>
+          <p class="vote-desc">\${safeDesc}</p>
+          <time datetime="\${new Date(vote.timestamp).toISOString()}" style="font-size:0.8rem;color:#666;">\${dateStr}</time>
         </article>
-      `;
+      \`;
     }).join('');
   }
 
