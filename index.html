@@ -1,577 +1,369 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>People Rating Hub</title>
-<style>
-  /* Reset and base */
-  * {
-    box-sizing: border-box;
-  }
-  body {
-    margin: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: #fff;
-    min-height: 600px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    overflow: hidden;
-  }
-  h1 {
-    margin: 1rem 0 0.5rem 0;
-    font-weight: 700;
-    text-align: center;
-    font-size: 1.8rem;
-    text-shadow: 0 2px 6px rgba(0,0,0,0.45);
-  }
-  #app {
-    width: 100%;
-    max-width: 350px;
-    background: rgba(255,255,255,0.05);
-    border-radius: 16px;
-    padding: 0.5rem 0.75rem 1.2rem 0.75rem;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-  }
-  /* Hub list */
-  #hubList {
-    overflow-y: auto;
-    padding: 0.5rem 0;
-    flex-grow: 1;
-  }
-  .person-card {
-    background: rgba(255,255,255,0.12);
-    border-radius: 12px;
-    margin-bottom: 1rem;
-    cursor: pointer;
-    display: flex;
-    gap: 12px;
-    padding: 10px 12px;
-    align-items: center;
-    transition: background-color 0.25s ease;
-  }
-  .person-card:hover {
-    background: rgba(255,255,255,0.2);
-  }
-  .person-photo {
-    flex-shrink: 0;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    object-fit: cover;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-  }
-  .person-info {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-  }
-  .person-name {
-    font-weight: 700;
-    font-size: 1.1rem;
-    margin-bottom: 0.2rem;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
-  }
-  .person-description {
-    font-size: 0.85rem;
-    color: #dcdcdccc;
-    margin-bottom: 0.3rem;
-    line-height: 1.2em;
-  }
-  .star-rating-small {
-    color: #f6c90e;
-    font-size: 1rem;
-    user-select: none;
-    display: flex;
-    align-items: center;
-  }
-  .average-rating-number {
-    font-weight: 600;
-    font-size: 0.9rem;
-    margin-left: 4px;
-    color: #ffeb7b;
-    text-shadow: 0 0 4px #dcc90e88;
-  }
-  /* Detail view */
-  #detailView {
-    display: none;
-    flex-direction: column;
-    height: 100%;
-    overflow-y: auto;
-    padding-bottom: 8px;
-  }
-  #detailHeader {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 0.8rem;
-  }
-  #detailPhoto {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    object-fit: cover;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    flex-shrink: 0;
-  }
-  #detailNameDesc {
-    flex-grow: 1;
-  }
-  #detailName {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 0.15rem;
-    text-shadow: 0 2px 6px rgba(0,0,0,0.4);
-  }
-  #detailDescription {
-    font-size: 1rem;
-    color: #ddddeecc;
-    line-height: 1.3em;
-  }
-  #backButton {
-    background: transparent;
-    border: 2px solid #f6c90e;
-    color: #f6c90e;
-    padding: 4px 12px;
-    border-radius: 24px;
-    font-weight: 600;
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.25s ease;
-    flex-shrink: 0;
-  }
-  #backButton:hover {
-    background: #f6c90e;
-    color: #512b01;
-  }
-  /* Rating form */
-  #ratingForm {
-    margin-top: 0.5rem;
-    background: rgba(255,255,255,0.1);
-    border-radius: 12px;
-    padding: 0.8rem 1rem;
-    box-shadow: inset 0 0 8px rgba(0,0,0,0.15);
-  }
-  #ratingForm label {
-    font-weight: 600;
-    color: #fffddf;
-    display: block;
-    margin-bottom: 0.2rem;
-    font-size: 1rem;
-  }
-  .star-rating-input {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 12px;
-    font-size: 1.8rem;
-  }
-  .star {
-    cursor: pointer;
-    color: #aaaabbdd;
-    transition: color 0.3s ease;
-    user-select: none;
-  }
-  .star.filled {
-    color: #ffce00;
-    text-shadow: 0 0 8px #ffd700cc;
-  }
-  #reviewText {
-    width: 100%;
-    min-height: 60px;
-    border-radius: 10px;
-    border: none;
-    padding: 8px 12px;
-    font-size: 1rem;
-    resize: vertical;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
-  #reviewText:focus {
-    outline: 2px solid #f6c90e;
-    background: #fff7a9cc;
-  }
-  #submitBtn {
-    background: #f6c90e;
-    border: none;
-    border-radius: 20px;
-    color: #512b01;
-    font-weight: 700;
-    font-size: 1.1rem;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    margin-top: 10px;
-    width: 100%;
-    box-shadow: 0 3px 5px rgba(246,201,14,0.75);
-    transition: background-color 0.3s ease;
-  }
-  #submitBtn:hover:not(:disabled) {
-    background: #e0b400;
-  }
-  #submitBtn:disabled {
-    background: #999966;
-    cursor: not-allowed;
-  }
-  /* Reviews displayed */
-  #reviewsList {
-    margin-top: 1rem;
-    max-height: 240px;
-    overflow-y: auto;
-    padding-right: 6px;
-  }
-  .review-item {
-    background: rgba(255,255,255,0.15);
-    padding: 8px 12px;
-    border-radius: 12px;
-    margin-bottom: 12px;
-    box-shadow: 0 0 6px rgba(0,0,0,0.2);
-  }
-  .review-stars {
-    color: #ffd600;
-    font-size: 1.1rem;
-    margin-bottom: 4px;
-  }
-  .review-text {
-    font-size: 0.95rem;
-    color: #fafafa;
-    line-height: 1.3em;
-    white-space: pre-wrap;
-  }
-  /* Scrollbar for lists */
-  #hubList::-webkit-scrollbar, #reviewsList::-webkit-scrollbar, #detailView::-webkit-scrollbar {
-    width: 6px;
-  }
-  #hubList::-webkit-scrollbar-thumb,
-  #reviewsList::-webkit-scrollbar-thumb,
-  #detailView::-webkit-scrollbar-thumb {
-    background-color: rgba(255,255,255,0.25);
-    border-radius: 3px;
-  }
-  #hubList::-webkit-scrollbar-track,
-  #reviewsList::-webkit-scrollbar-track,
-  #detailView::-webkit-scrollbar-track {
-    background: transparent;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+  <title>Voting People PWA</title>
+
+  <!-- Manifest -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#2a9d8f" />
+
+  <style>
+    /* Reset & base */
+    * {
+      box-sizing: border-box;
+      margin: 0; padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background: #e0f2f1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      max-width: 350px;
+      margin: 0 auto;
+      padding: 1rem;
+      color: #264653;
+      overscroll-behavior-y: contain;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-weight: 700;
+      font-size: 1.8rem;
+      color: #264653;
+      margin-bottom: 0.2rem;
+    }
+    p.subtitle {
+      font-size: 0.9rem;
+      color: #555;
+      margin-bottom: 1rem;
+    }
+
+    main {
+      width: 100%;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      overflow-y: auto;
+      padding-bottom: 1rem;
+    }
+
+    form {
+      background: #ffffffdd;
+      border-radius: 10px;
+      padding: 1rem;
+      box-shadow: 0 4px 8px rgb(0 0 0 / 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+    label {
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+    input[type="text"], textarea {
+      padding: 0.6rem;
+      border-radius: 6px;
+      border: 1px solid #aaa;
+      font-size: 1rem;
+      resize: vertical;
+      transition: border-color 0.3s ease;
+      font-family: inherit;
+    }
+    input[type="text"]:focus, textarea:focus {
+      outline: none;
+      border-color: #2a9d8f;
+      box-shadow: 0 0 6px #2a9d8faa;
+    }
+    textarea {
+      min-height: 60px;
+    }
+
+    .stars {
+      display: flex;
+      gap: 5px;
+    }
+    .star {
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #ccc;
+      user-select: none;
+      transition: color 0.3s ease;
+    }
+    .star.selected, .star.hovered {
+      color: #f4a261;
+      text-shadow: 0 0 3px #f4a261aa;
+    }
+
+    button {
+      background: #2a9d8f;
+      color: white;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 0.6rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-top: 0.5rem;
+      user-select: none;
+    }
+    button:hover, button:focus {
+      background: #21867a;
+      outline: none;
+    }
+    button:disabled {
+      background: #999;
+      cursor: not-allowed;
+    }
+
+    .votes-list {
+      background: #ffffffdd;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgb(0 0 0 / 0.1);
+      max-height: 350px;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .vote-item {
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 0.5rem;
+    }
+    .vote-item:last-child {
+      border-bottom: none;
+    }
+    .vote-stars {
+      color: #f4a261;
+      margin-bottom: 0.3rem;
+      font-size: 1.3rem;
+    }
+    .vote-desc {
+      font-size: 1rem;
+      white-space: pre-wrap;
+      color: #264653;
+      margin-left: 4px;
+    }
+    .no-votes {
+      text-align: center;
+      color: #666;
+      font-style: italic;
+      font-size: 0.9rem;
+      margin-top: 1rem;
+    }
+
+    /* Scrollbar styling for modern browsers */
+    main::-webkit-scrollbar, .votes-list::-webkit-scrollbar {
+      width: 8px;
+    }
+    main::-webkit-scrollbar-thumb, .votes-list::-webkit-scrollbar-thumb {
+      background-color: #2a9d8f88;
+      border-radius: 4px;
+    }
+
+    /* Make sure fits height 600px */
+    @media (max-height: 600px) {
+      body, main, .votes-list {
+        max-height: 600px;
+      }
+    }
+  </style>
+
+  <!-- Manifest defined inline here for demonstration, but also linked externally for PWA -->
+  <link rel="manifest" href="manifest.json" />
+
 </head>
 <body>
-<h1>People Rating Hub</h1>
-<div id="app">
-  <!-- Hub list -->
-  <div id="hubList" aria-label="People list">
-    Loading people...
-  </div>
-  <!-- Detail and rating view -->
-  <div id="detailView" aria-label="Person detail and rating form">
-    <div id="detailHeader">
-      <button id="backButton" aria-label="Back to people hub">&larr; Back</button>
-      <img id="detailPhoto" alt="Person photo" src="" />
-      <div id="detailNameDesc">
-        <h2 id="detailName"></h2>
-        <p id="detailDescription"></p>
+  <header>
+    <h1>Vote With Stars</h1>
+    <p class="subtitle">Give a star rating and description</p>
+  </header>
+
+  <main>
+    <form id="voteForm" aria-label="Vote form">
+      <label for="description">Description:</label>
+      <textarea id="description" name="description" placeholder="Write your vote description..." required maxlength="250" aria-required="true"></textarea>
+
+      <label>Rating:</label>
+      <div class="stars" role="radiogroup" aria-labelledby="rating-label" tabindex="0">
+        <span class="star" data-value="1" role="radio" aria-checked="false" tabindex="-1" aria-label="1 star">&#9733;</span>
+        <span class="star" data-value="2" role="radio" aria-checked="false" tabindex="-1" aria-label="2 stars">&#9733;</span>
+        <span class="star" data-value="3" role="radio" aria-checked="false" tabindex="-1" aria-label="3 stars">&#9733;</span>
+        <span class="star" data-value="4" role="radio" aria-checked="false" tabindex="-1" aria-label="4 stars">&#9733;</span>
+        <span class="star" data-value="5" role="radio" aria-checked="false" tabindex="-1" aria-label="5 stars">&#9733;</span>
       </div>
-    </div>
-    <form id="ratingForm" aria-label="Rating form">
-      <label for="starInput">Rate with stars:</label>
-      <div class="star-rating-input" id="starInput" role="radiogroup" aria-label="Star rating">
-        <!-- stars inserted by JS -->
-      </div>
-      <label for="reviewText">Add your review:</label>
-      <textarea id="reviewText" name="reviewText" placeholder="Write your review here..." rows="3" required></textarea>
-      <button type="submit" id="submitBtn" disabled>Submit Rating</button>
+
+      <button type="submit" aria-label="Submit your vote" disabled>Submit Vote</button>
     </form>
-    <div id="reviewsList" aria-live="polite" aria-label="Reviews list">
-      <!-- reviews inserted here -->
-    </div>
-  </div>
-</div>
+
+    <section aria-live="polite" aria-relevant="additions" aria-atomic="true" class="votes-list" id="votesList" tabindex="0" aria-label="List of votes">
+      <p class="no-votes">No votes yet. Be the first to vote!</p>
+    </section>
+  </main>
+
 <script>
-  // API base URL - adjust if hosted elsewhere or port differs
-  const API_BASE = 'http://localhost:3000';
+  'use strict';
 
-  // Elements
-  const hubList = document.getElementById('hubList');
-  const detailView = document.getElementById('detailView');
-  const detailPhoto = document.getElementById('detailPhoto');
-  const detailName = document.getElementById('detailName');
-  const detailDescription = document.getElementById('detailDescription');
-  const backButton = document.getElementById('backButton');
-  const starInput = document.getElementById('starInput');
-  const reviewText = document.getElementById('reviewText');
-  const submitBtn = document.getElementById('submitBtn');
-  const reviewsList = document.getElementById('reviewsList');
-  const ratingForm = document.getElementById('ratingForm');
+  // Voting app logic with localStorage persistence
 
-  let people = [];
-  let selectedPerson = null;
+  const voteForm = document.getElementById('voteForm');
+  const starsContainer = voteForm.querySelector('.stars');
+  const stars = Array.from(starsContainer.querySelectorAll('.star'));
+  const descriptionField = document.getElementById('description');
+  const submitBtn = voteForm.querySelector('button[type="submit"]');
+  const votesList = document.getElementById('votesList');
+
   let currentRating = 0;
 
-  // Fetch people from backend
-  async function loadPeople() {
-    try {
-      const response = await fetch(`${API_BASE}/people`);
-      if (!response.ok) throw new Error('Failed to load people');
-      return await response.json();
-    } catch (e) {
-      alert('Error loading people: ' + e.message);
-      return [];
-    }
-  }
-
-  // Fetch ratings for a person from backend
-  async function loadRatings(personId) {
-    try {
-      const response = await fetch(`${API_BASE}/people/${personId}/ratings`);
-      if (!response.ok) throw new Error('Failed to load ratings');
-      return await response.json();
-    } catch (e) {
-      alert('Error loading ratings: ' + e.message);
-      return [];
-    }
-  }
-
-  // Submit rating to backend
-  async function submitRating(personId, stars, review) {
-    try {
-      const response = await fetch(`${API_BASE}/people/${personId}/ratings`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({stars, review})
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to submit rating');
-      }
-      return await response.json();
-    } catch (e) {
-      alert('Error submitting rating: ' + e.message);
-      return null;
-    }
-  }
-
-  // Calculate average rating for given array of ratings
-  function averageRating(ratings) {
-    if (!ratings || ratings.length === 0) return 0;
-    const sum = ratings.reduce((acc, r) => acc + r.stars, 0);
-    return sum / ratings.length;
-  }
-
-  // Create star elements for rating display
-  function createStarElements(rating, max = 5, small = false) {
-    const stars = [];
-    let fullStars = Math.floor(rating);
-    for (let i = 1; i <= max; i++) {
-      const star = document.createElement('span');
-      star.className = small ? 'star-rating-small' : '';
-      star.textContent = i <= fullStars ? '★' : '☆';
-      stars.push(star);
-    }
-    return stars;
-  }
-
-  // Render the hub list of people with average rating (fetched ratings)
-  async function renderHub() {
-    hubList.innerHTML = '';
-    for (let person of people) {
-      // Load ratings for the person from backend
-      const ratings = await loadRatings(person.id);
-      const avg = averageRating(ratings);
-
-      const card = document.createElement('div');
-      card.className = 'person-card';
-      card.tabIndex = 0;
-      card.setAttribute('role', 'button');
-      card.setAttribute('aria-label', `View and rate ${person.name}`);
-
-      card.addEventListener('click', () => openDetail(person.id));
-      card.addEventListener('keypress', e => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          openDetail(person.id);
-        }
-      });
-
-      const img = document.createElement('img');
-      img.src = person.photo;
-      img.alt = `Photo of ${person.name}`;
-      img.className = 'person-photo';
-      card.appendChild(img);
-
-      const info = document.createElement('div');
-      info.className = 'person-info';
-
-      const name = document.createElement('div');
-      name.className = 'person-name';
-      name.textContent = person.name;
-      info.appendChild(name);
-
-      const desc = document.createElement('div');
-      desc.className = 'person-description';
-      desc.textContent = person.description;
-      info.appendChild(desc);
-
-      const starContainer = document.createElement('div');
-      starContainer.className = 'star-rating-small';
-      const stars = createStarElements(avg, 5, true);
-      stars.forEach(star => starContainer.appendChild(star));
-      if (avg > 0) {
-        const avgNumber = document.createElement('span');
-        avgNumber.className = 'average-rating-number';
-        avgNumber.textContent = avg.toFixed(1);
-        starContainer.appendChild(avgNumber);
-      }
-      info.appendChild(starContainer);
-
-      card.appendChild(info);
-      hubList.appendChild(card);
-    }
-  }
-
-  // Render stars for input in detail view
-  function renderStarInput() {
-    starInput.innerHTML = '';
-    for (let i = 1; i <= 5; i++) {
-      const star = document.createElement('span');
-      star.className = 'star';
-      star.textContent = '☆';
-      star.setAttribute('role', 'radio');
-      star.setAttribute('aria-label', `${i} star${i > 1 ? 's' : ''}`);
-      star.setAttribute('tabindex', '0');
-      star.dataset.value = i;
-      star.addEventListener('click', () => {
-        currentRating = i;
-        updateStarInput();
-      });
-      star.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          currentRating = i;
-          updateStarInput();
-        }
-      });
-      starInput.appendChild(star);
-    }
-    updateStarInput();
-  }
-
-  // Update the visual fill of star input
-  function updateStarInput() {
-    const stars = starInput.querySelectorAll('.star');
+  // Helper to update stars UI
+  function updateStars(rating) {
     stars.forEach(star => {
-      star.classList.toggle('filled', parseInt(star.dataset.value) <= currentRating);
-      star.textContent = star.classList.contains('filled') ? '★' : '☆';
+      const starValue = parseInt(star.dataset.value, 10);
+      if (starValue <= rating) {
+        star.classList.add('selected');
+        star.setAttribute('aria-checked', 'true');
+      } else {
+        star.classList.remove('selected');
+        star.setAttribute('aria-checked', 'false');
+      }
     });
-    validateForm();
   }
 
-  // Validate form to enable submit button if valid
-  function validateForm() {
-    const hasRating = currentRating > 0;
-    const reviewLen = reviewText.value.trim().length > 0;
-    submitBtn.disabled = !(hasRating && reviewLen);
+  // Enable or disable submit button
+  function checkFormValidity() {
+    submitBtn.disabled = currentRating === 0 || descriptionField.value.trim().length === 0;
   }
 
-  // Clear rating form inputs
-  function clearForm() {
-    currentRating = 0;
-    reviewText.value = '';
-    updateStarInput();
+  // Star hover effect
+  stars.forEach(star => {
+    star.addEventListener('mouseenter', () => {
+      const val = parseInt(star.dataset.value, 10);
+      stars.forEach(s => {
+        if (parseInt(s.dataset.value, 10) <= val) {
+          s.classList.add('hovered');
+        } else {
+          s.classList.remove('hovered');
+        }
+      });
+    });
+    star.addEventListener('mouseleave', () => {
+      stars.forEach(s => s.classList.remove('hovered'));
+    });
+    star.addEventListener('click', () => {
+      currentRating = parseInt(star.dataset.value, 10);
+      updateStars(currentRating);
+      checkFormValidity();
+    });
+    // keyboard accessibility for stars
+    star.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        star.click();
+      }
+    });
+  });
+
+  // Update button enabled state on description input
+  descriptionField.addEventListener('input', checkFormValidity);
+
+  // Data structure in localStorage: array of votes [{rating:number, description:string, timestamp:number}]
+  const STORAGE_KEY = 'pwa-voting-people-votes';
+
+  // Save votes to localStorage
+  function saveVotes(votes) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(votes));
   }
 
-  // Render all reviews for the selected person
-  function renderReviews(ratings) {
-    reviewsList.innerHTML = '';
-    if (!ratings || ratings.length === 0) {
-      const noReview = document.createElement('p');
-      noReview.textContent = 'No ratings yet. Be the first to rate!';
-      noReview.style.color = '#ffffffa0';
-      noReview.style.fontStyle = 'italic';
-      reviewsList.appendChild(noReview);
+  // Load votes from localStorage
+  function loadVotes() {
+    const votesStr = localStorage.getItem(STORAGE_KEY);
+    if (!votesStr) return [];
+    try {
+      const votes = JSON.parse(votesStr);
+      if (Array.isArray(votes)) return votes;
+    } catch {
+      // ignore invalid JSON
+    }
+    return [];
+  }
+
+  // Render votes list
+  function renderVotes() {
+    const votes = loadVotes();
+    if (votes.length === 0) {
+      votesList.innerHTML = '<p class="no-votes">No votes yet. Be the first to vote!</p>';
       return;
     }
-    ratings.forEach(review => {
-      const revItem = document.createElement('div');
-      revItem.className = 'review-item';
+    // sort by timestamp descending
+    votes.sort((a,b) => b.timestamp - a.timestamp);
+    votesList.innerHTML = votes.map(vote => {
+      // star string
+      const fullStars = '★'.repeat(vote.rating);
+      const emptyStars = '☆'.repeat(5 - vote.rating);
+      const safeDesc = vote.description.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const dateStr = new Date(vote.timestamp).toLocaleString();
+      return `
+        <article class="vote-item" tabindex="0">
+          <div class="vote-stars" aria-label="Rating: ${vote.rating} out of 5 stars">${fullStars}${emptyStars}</div>
+          <p class="vote-desc">${safeDesc}</p>
+          <time datetime="${new Date(vote.timestamp).toISOString()}" style="font-size:0.8rem;color:#666;">${dateStr}</time>
+        </article>
+      `;
+    }).join('');
+  }
 
-      const starSpan = document.createElement('div');
-      starSpan.className = 'review-stars';
-      let starsText = '';
-      for (let i = 1; i <= 5; i++) {
-        starsText += i <= review.stars ? '★' : '☆';
-      }
-      starSpan.textContent = starsText;
-      revItem.appendChild(starSpan);
+  // On form submit
+  voteForm.addEventListener('submit', e => {
+    e.preventDefault();
+    if (currentRating === 0) return;
+    const desc = descriptionField.value.trim();
+    if (desc.length === 0) return;
 
-      const reviewTextEl = document.createElement('div');
-      reviewTextEl.className = 'review-text';
-      reviewTextEl.textContent = review.review || review.text || '';
-      revItem.appendChild(reviewTextEl);
+    const votes = loadVotes();
+    votes.push({
+      rating: currentRating,
+      description: desc,
+      timestamp: Date.now()
+    });
+    saveVotes(votes);
+    renderVotes();
 
-      reviewsList.appendChild(revItem);
+    // Reset form
+    currentRating = 0;
+    updateStars(0);
+    descriptionField.value = '';
+    submitBtn.disabled = true;
+
+    // Focus description field for next input
+    descriptionField.focus();
+  });
+
+  // Initialize
+  updateStars(0);
+  checkFormValidity();
+  renderVotes();
+
+  // Register service worker for offline capability
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => {
+          console.log('Service Worker registered.', reg);
+        })
+        .catch(err => {
+          console.warn('Service Worker registration failed:', err);
+        });
     });
   }
-
-  // Open detail view for person id
-  async function openDetail(id) {
-    selectedPerson = people.find(p => p.id === id);
-    if (!selectedPerson) return;
-    detailPhoto.src = selectedPerson.photo;
-    detailPhoto.alt = `Photo of ${selectedPerson.name}`;
-    detailName.textContent = selectedPerson.name;
-    detailDescription.textContent = selectedPerson.description;
-    clearForm();
-    const ratings = await loadRatings(id);
-    renderReviews(ratings);
-    hubList.style.display = 'none';
-    detailView.style.display = 'flex';
-    detailView.scrollTop = 0;
-  }
-
-  // Back to hub list
-  backButton.addEventListener('click', () => {
-    selectedPerson = null;
-    hubList.style.display = 'block';
-    detailView.style.display = 'none';
-  });
-
-  // Enable/disable submit on input changes
-  reviewText.addEventListener('input', validateForm);
-
-  // Submit rating form handler
-  ratingForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (!selectedPerson) return;
-    if (currentRating === 0 || reviewText.value.trim() === '') return;
-
-    const result = await submitRating(selectedPerson.id, currentRating, reviewText.value.trim());
-    if (result) {
-      alert('Thank you for your rating!');
-      clearForm();
-      const ratings = await loadRatings(selectedPerson.id);
-      renderReviews(ratings);
-      await renderHub(); // refresh hub to update averages
-    }
-  });
-
-  // Initialize app
-  async function init() {
-    people = await loadPeople();
-    if (people.length === 0) {
-      hubList.textContent = 'No people found.';
-    } else {
-      await renderHub();
-    }
-    renderStarInput();
-  }
-
-  init();
-
 </script>
+
 </body>
 </html>
-</content>
-</create_file>
-  
