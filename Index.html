@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Interactive Tournament Bracket</title>
+<style>
+  /* Reset and base */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 1rem;
+    overflow-x: hidden;
+  }
+  h1 {
+    font-weight: 900;
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+    text-align: center;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(255 255 255 / 0.6);
+  }
+  /* Form page styles */
+  #setupPage {
+    width: 100%;
+    max-width: 320px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+    backdrop-filter: blur(10px);
+    animation: fadeInDown 0.8s ease forwards;
+  }
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+    font-size: 0.9rem;
+  }
+  input[type="text"], input[type="number"] {
+    width: 100%;
+    border-radius: 8px;
+    border: none;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    outline: none;
+    transition: box-shadow 0.3s ease;
+  }
+  input[type="text"]:focus, input[type="number"]:focus {
+    box-shadow: 0 0 8px 2px #fff;
+    background-color: rgba(255 255 255 / 0.15);
+    color: #fff;
+  }
+  button {
+    width: 100%;
+    padding: 0.65rem 0;
+    background: #9f7aea;
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    transition: background 0.3s ease;
+  }
+  button:hover:enabled {
+    background: #7c3aed;
+    box-shadow: 0 0 12px #7c3aed;
+  }
+  button:disabled {
+    background: #5c3d95;
+    cursor: default;
+  }
+  /* Bracket editing page */
+  #bracketPage {
+    width: 100%;
+    max-width: 360px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 4px 40px rgba(0,0,0,0.4);
+    backdrop-filter: blur(10px);
+    overflow-x: auto;
+    max-height: 600px;
+    display: none;
+    flex-direction: column;
+  }
+  #tournamentTitle {
+    font-size: 1.4rem;
+    font-weight: 900;
+    margin-bottom: 1rem;
+    letter-spacing: 2px;
+    text-align: center;
+    color: #ffd700;
+    text-shadow: 0 0 8px #ffd700;
+    user-select: none;
+  }
+  #bracket {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    position: relative;
+    padding-bottom: 2rem;
+  }
+  .round {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    min-width: 120px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .round .round-title {
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 0.75rem;
+    color: #facc15;
+    text-shadow: 0 0 6px #facc15;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .match {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 0.5rem 0.75rem;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    color: #fff;
+    user-select: none;
+    animation: fadeInScale 0.35s ease forwards;
+    opacity: 0;
+    position: relative;
+  }
+  .match.show {
+    opacity: 1;
+  }
+  .player-input {
+    background: rgba(255,255,255,0.1);
+    border-radius: 6px;
+    padding: 0.3rem 0.5rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    color: #ffd700;
+    box-shadow: 0 0 3px #ffd700;
+    text-align: center;
+    border: none;
+    outline: none;
+    width: 100%;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+  }
+  .player-input:focus {
+    background: rgba(255 255 255 / 0.3);
+    box-shadow: 0 0 6px #ffd700;
+  }
+  #finalizeBtn {
+    margin-top: 1rem;
+  }
+  /* Connector lines between rounds */
+  .connector {
+    position: absolute;
+    border-left: 2px solid #ffd700;
+    border-bottom: 2px solid #ffd700;
+    box-shadow: 0 0 4px #facc15;
+  }
+  /* Animations */
+  @keyframes fadeInDown {
+    0% {
+      opacity: 0;
+      transform: translateY(-30px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes fadeInScale {
+    0% {
+      opacity: 0;
+      transform: scale(0.75);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @media (max-width: 400px) {
+    body {
+      padding: 0.75rem;
+    }
+    #setupPage, #bracketPage {
+      max-width: 100%;
+      padding: 1rem;
+    }
+    .round {
+      min-width: 100px;
+    }
+    .player-input {
+      font-size: 0.9rem;
+    }
+  }
+</style>
+</head>
+<body>
+<h1>Interactive Tournament Bracket</h1>
+
+<!-- Step 1: Setup Form -->
+<div id="setupPage">
+  <form id="setupForm" autocomplete="off">
+    <label for="tournamentName">Tournament Name</label>
+    <input type="text" id="tournamentName" name="tournamentName" placeholder="Enter tournament name" required maxlength="30" />
+    <label for="numSlots">Number of Slots</label>
+    <input type="number" id="numSlots" name="numSlots" min="2" max="32" value="8" required />
+    <button type="submit">Next: Build Bracket</button>
+  </form>
+</div>
+
+<!-- Step 2: Bracket Editing Page -->
+<div id="bracketPage" tabindex="0" aria-live="polite">
+  <div id="tournamentTitle"></div>
+  <div id="bracket"></div>
+  <button id="finalizeBtn" disabled>Finalize Tournament</button>
+</div>
+
+<script>
+  const setupForm = document.getElementById('setupForm');
+  const setupPage = document.getElementById('setupPage');
+  const bracketPage = document.getElementById('bracketPage');
+  const tournamentTitle = document.getElementById('tournamentTitle');
+  const bracketDiv = document.getElementById('bracket');
+  const finalizeBtn = document.getElementById('finalizeBtn');
+
+  let tournamentName = "";
+  let totalSlots = 0;
+  let rounds = [];
+
+  const roundNamesBySize = {
+    1: "Final",
+    2: "Semifinals",
+    3: "Quarterfinals",
+    4: "Round of 16",
+    5: "Round of 32"
+  };
+
+  function nextPowerOfTwo(n) {
+    return 2 ** Math.ceil(Math.log2(n));
+  }
+
+  // Generate initial rounds structure: array of rounds; each round array contains matches ([player1, player2])
+  function generateInitialRounds(players) {
+    const size = nextPowerOfTwo(players.length);
+    const totalByes = size - players.length;
+
+    // Create first round matches with byes as null players
+    const firstRound = [];
+    let i = 0;
+    const allPlayers = [...players];
+    for(let b=0; b<totalByes; b++) {
+      allPlayers.push(null);
+    }
+    for(i=0; i<size; i+=2) {
+      firstRound.push([allPlayers[i], allPlayers[i+1]]);
+    }
+
+    const rounds = [firstRound];
+
+    // Next rounds with empty matches placeholders
+    let roundCount = Math.log2(size);
+    for(let r=1; r<roundCount; r++) {
+      const prevRoundMatches = rounds[r-1];
+      const nextRoundMatchesCount = Math.ceil(prevRoundMatches.length / 2);
+      const nextRound = [];
+      for(let m=0; m<nextRoundMatchesCount; m++) {
+        nextRound.push([null, null]);
+      }
+      rounds.push(nextRound);
+    }
+    return rounds;
+  }
+
+  // Create DOM structure for rounds with input fields for player names
+  // Editable: only first round inputs enabled, rest disabled (filled later)
+  function renderBracketWithInputs(rounds) {
+    bracketDiv.innerHTML = "";
+    const totalRounds = rounds.length;
+
+    rounds.forEach((round, rindex) => {
+      const roundDiv = document.createElement("div");
+      roundDiv.classList.add("round");
+
+      const roundTitle = document.createElement("div");
+      roundTitle.classList.add("round-title");
+      roundTitle.textContent = roundNamesBySize[totalRounds - rindex] || `Round ${rindex+1}`;
+      roundDiv.appendChild(roundTitle);
+
+      round.forEach((match, mindex) => {
+        const matchDiv = document.createElement("div");
+        matchDiv.classList.add("match");
+        setTimeout(() => {
+          matchDiv.classList.add("show");
+        }, 100 * mindex);
+
+        // Player 1 input
+        const p1Input = document.createElement("input");
+        p1Input.type = "text";
+        p1Input.maxLength = 20;
+        p1Input.classList.add("player-input");
+        p1Input.setAttribute("aria-label", `Round ${rindex+1} Match ${mindex+1} Player 1`);
+        p1Input.value = match[0] !== null ? match[0] : "";
+        p1Input.placeholder = match[0] === null ? "Bye" : `Player ${mindex*2 + 1}`;
+        if(rindex !== 0) p1Input.disabled = true;
+
+        // Player 2 input
+        const p2Input = document.createElement("input");
+        p2Input.type = "text";
+        p2Input.maxLength = 20;
+        p2Input.classList.add("player-input");
+        p2Input.setAttribute("aria-label", `Round ${rindex+1} Match ${mindex+1} Player 2`);
+        p2Input.value = match[1] !== null ? match[1] : "";
+        p2Input.placeholder = match[1] === null ? "Bye" : `Player ${mindex*2 + 2}`;
+        if(rindex !== 0) p2Input.disabled = true;
+
+        matchDiv.appendChild(p1Input);
+        matchDiv.appendChild(p2Input);
+
+        roundDiv.appendChild(matchDiv);
+      });
+
+      bracketDiv.appendChild(roundDiv);
+    });
+
+    createConnectors();
+  }
+
+  // Create connector lines between matches to form a bracket tree visually
+  function createConnectors() {
+    // Clear old connectors
+    let oldConnectors = document.querySelectorAll('.connector');
+    oldConnectors.forEach(el => el.remove());
+
+    const rounds = bracketDiv.querySelectorAll('.round');
+    for(let i=0; i < rounds.length -1; i++) {
+      const currentRound = rounds[i];
+      const nextRound = rounds[i+1];
+      const currentMatches = currentRound.querySelectorAll('.match');
+      const nextMatches = nextRound.querySelectorAll('.match');
+
+      for(let j=0; j < currentMatches.length; j+=2) {
+        const match1 = currentMatches[j];
+        const match2 = currentMatches[j+1];
+        const nextMatch = nextMatches[Math.floor(j/2)];
+
+        if(!match2 || !nextMatch) continue;
+
+        const rRect = bracketDiv.getBoundingClientRect();
+        const m1Rect = match1.getBoundingClientRect();
+        const m2Rect = match2.getBoundingClientRect();
+        const nmRect = nextMatch.getBoundingClientRect();
+
+        const startX = m1Rect.right - rRect.left;
+        const startY = (m1Rect.top + m1Rect.height/2) - rRect.top;
+        const midY = (m2Rect.top + m2Rect.height/2) - rRect.top;
+        const endX = nmRect.left - rRect.left;
+        const endY = (nmRect.top + nmRect.height/2) - rRect.top;
+
+        const vHeight = Math.abs(midY - startY);
+        const vTop = Math.min(startY, midY);
+
+        const vertLine = document.createElement('div');
+        vertLine.classList.add('connector');
+        vertLine.style.width = '2px';
+        vertLine.style.height = vHeight + 'px';
+        vertLine.style.left = (startX + 5) + 'px';
+        vertLine.style.top = vTop + 'px';
+        bracketDiv.appendChild(vertLine);
+
+        const hLineTop = document.createElement('div');
+        hLineTop.classList.add('connector');
+        hLineTop.style.height = '2px';
+        hLineTop.style.width = (endX - startX - 5) + 'px';
+        hLineTop.style.left = (startX + 5) + 'px';
+        hLineTop.style.top = startY + 'px';
+        bracketDiv.appendChild(hLineTop);
+
+        const hLineBottom = document.createElement('div');
+        hLineBottom.classList.add('connector');
+        hLineBottom.style.height = '2px';
+        hLineBottom.style.width = (endX - startX - 5) + 'px';
+        hLineBottom.style.left = (startX + 5) + 'px';
+        hLineBottom.style.top = midY + 'px';
+        bracketDiv.appendChild(hLineBottom);
+
+        const vertLine2 = document.createElement('div');
+        vertLine2.classList.add('connector');
+        vertLine2.style.width = '2px';
+        vertLine2.style.height = Math.abs(endY - vTop) + 'px';
+        vertLine2.style.left = endX + 'px';
+        vertLine2.style.top = Math.min(endY, vTop) + 'px';
+        bracketDiv.appendChild(vertLine2);
+      }
+    }
+  }
+
+  // Validate that all first round player name inputs are filled or Bye
+  function validateFirstRoundInputs() {
+    const firstRoundInputs = bracketDiv.querySelectorAll('.round:nth-child(1) .player-input');
+    for (let input of firstRoundInputs) {
+      if (!input.disabled && input.placeholder !== "Bye" && input.value.trim() === "") {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Enable finalize button if validation passes
+  function updateFinalizeButton() {
+    finalizeBtn.disabled = !validateFirstRoundInputs();
+  }
+
+  // On each input change, update finalize button state
+  function setupInputListeners() {
+    const firstRoundInputs = bracketDiv.querySelectorAll('.round:nth-child(1) .player-input');
+    firstRoundInputs.forEach(input => {
+      input.addEventListener("input", updateFinalizeButton);
+    });
+    updateFinalizeButton();
+  }
+
+  // When Finalize clicked, lock inputs and highlight bracket (simulate tournament locked)
+  function finalizeTournament() {
+    bracketDiv.querySelectorAll("input.player-input").forEach(input => {
+      input.disabled = true;
+      input.style.backgroundColor = "rgba(255 255 255 / 0.25)";
+    });
+    finalizeBtn.disabled = true;
+    alert("Tournament finalized! You can now simulate or manage matches.");
+  }
+
+  // Form submit event
+  setupForm.addEventListener("submit", e => {
+    e.preventDefault();
+    tournamentName = setupForm["tournamentName"].value.trim();
+    totalSlots = parseInt(setupForm["numSlots"].value);
+    if (tournamentName === "") {
+      alert("Please enter a tournament name");
+      return;
+    }
+    if (isNaN(totalSlots) || totalSlots < 2 || totalSlots > 32) {
+      alert("Please enter number of slots between 2 and 32");
+      return;
+    }
+    setupPage.style.display = "none";
+    bracketPage.style.display = "flex";
+    tournamentTitle.textContent = tournamentName;
+    const initialPlayers = Array(totalSlots).fill(null).map((_,i)=> `Player ${i+1}`);
+    rounds = generateInitialRounds(initialPlayers);
+    renderBracketWithInputs(rounds);
+    setupInputListeners();
+    bracketPage.focus();
+  });
+
+  finalizeBtn.addEventListener("click", finalizeTournament);
+
+</script>
+</body>
+</html>
