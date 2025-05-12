@@ -3,870 +3,261 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>Tournament Bracket</title>
+<title>Dashboard Hub</title>
 <style>
-  /* Reset and base */
+  /* Reset */
   * {
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
   }
   body {
-    margin: 0;
+    background: #121212;
+    color: #e0e0e0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: #fff;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    user-select: none;
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+    position: relative;
   }
-  header {
-    padding: 1rem 1.5rem;
-    font-size: 1.6rem;
-    font-weight: 700;
-    text-align: center;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-  }
-  main {
-    flex-grow: 1;
-    overflow-y: auto;
-    padding: 0 0.5rem 1rem 0.5rem;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Hub form styling */
-  .hub {
+  .hub-container {
+    width: 100%;
     max-width: 350px;
-    margin: 0 auto;
-    background: rgba(0,0,0,0.3);
-    padding: 1.25rem 1rem 1.5rem 1rem;
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.35);
-  }
-  .hub label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-    font-size: 1rem;
-  }
-  .hub input[type="text"],
-  .hub input[type="number"] {
-    width: 100%;
-    padding: 0.6rem 0.8rem;
-    font-size: 1rem;
-    border-radius: 8px;
-    border: none;
-    margin-bottom: 1rem;
-    outline: none;
-    transition: box-shadow 0.3s ease;
-    font-family: inherit;
-  }
-  .hub input[type="number"]::-webkit-inner-spin-button,
-  .hub input[type="number"]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-  .hub input[type="number"] {
-     -moz-appearance:textfield;
-  }
-  .hub input[type="text"]:focus,
-  .hub input[type="number"]:focus {
-    box-shadow: 0 0 8px #a880ff;
-    background: #1d1c2c;
-    color: #ddd;
-  }
-  .hub button {
-    width: 100%;
-    background: #a880ff;
-    border: none;
-    color: #fff;
-    font-size: 1.1rem;
-    padding: 0.8rem;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 600;
-    box-shadow: 0 6px 15px #9f79ffcc;
-    transition: background 0.3s ease;
-    margin-bottom: 1rem;
-  }
-  .hub button:hover,
-  .hub button:focus {
-    background: #8b63e6;
-  }
-  .error-message {
-    color: #ff6961;
-    margin-bottom: 1rem;
-    font-weight: 600;
-    text-align: center;
-  }
-
-  /* Participants input container */
-  .participants-inputs {
-    max-height: 220px;
-    overflow-y: auto;
-    margin-bottom: 1rem;
-    border-radius: 10px;
-    padding-right: 6px; /* for scrollbar spacing */
-  }
-  .participant-input {
-    margin-bottom: 0.5rem;
-  }
-  .participant-input input {
-    width: 100%;
-    padding: 0.5rem 0.7rem;
-    font-size: 1rem;
-    border-radius: 8px;
-    border: none;
-    outline: none;
-    font-family: inherit;
-    transition: box-shadow 0.3s ease;
-  }
-  .participant-input input:focus {
-    box-shadow: 0 0 8px #a880ff;
-    background: #1d1c2c;
-    color: #ddd;
-  }
-  /* Bracket container */
-  .bracket-container {
-    max-width: 100%;
-    overflow-x: auto;
-    padding: 0.5rem;
-    border-left: 2px solid rgba(255,255,255,0.4);
-    border-top: 2px solid rgba(255,255,255,0.4);
-    border-bottom: 2px solid rgba(255,255,255,0.4);
-    border-radius: 16px 0 0 16px;
-    box-sizing: border-box;
-  }
-  .bracket {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    min-width: 280px;
-  }
-  .round {
+    background: #1f1f1f;
+    border-radius: 15px;
+    padding: 20px 20px 60px; /* extra bottom for popup */
+    box-shadow: 0 0 15px rgba(0,0,0,0.7);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 30px;
-    min-width: 80px;
-    position: relative;
   }
-  .round-title {
-    font-weight: 700;
-    margin-bottom: 18px;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-    font-size: 0.95rem;
-  }
-
-  /* Match styling */
-  .match {
-    background: rgba(255,255,255,0.1);
-    border-radius: 10px;
-    box-shadow: inset 0 0 6px #7b55ffaa;
-    min-width: 80px;
-    cursor: pointer;
-    user-select: none;
-    padding: 4px 8px;
-    transition: background-color 0.3s ease;
-    position: relative;
-  }
-  .match.bye-match {
-    cursor: default;
-    background: rgba(255,255,255,0.05);
-  }
-  .match.winner-selected {
-    box-shadow: 0 0 16px 3px #a880ff;
-    background-color: #5a3eebdd;
-  }
-  /* Player with flex row for arrow */
-  .player {
-    padding: 4px 6px;
-    border-radius: 6px;
-    margin-bottom: 4px;
-    background-color: rgba(255,255,255,0.15);
-    transition: background-color 0.3s ease;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.9rem;
-    position: relative;
-  }
-  .player:last-child {
-    margin-bottom: 0;
-  }
-  .player.winner {
-    font-weight: 700;
-    color: #fff;
-    background-color: #a880ffdd;
-  }
-  .player:hover:not(.winner) {
-    background-color: #7f61f8cc;
-  }
-  .player .arrow {
-    width: 14px;
-    height: 14px;
-    margin-left: 8px;
-    flex-shrink: 0;
-    fill: rgba(255, 255, 255, 0.7);
-    transition: fill 0.3s ease;
-  }
-  .player.winner .arrow {
-    fill: #fff;
-  }
-  /* If no player, hide arrow */
-  .player.no-arrow .arrow {
-    display: none;
-  }
-
-  /* Animation highlight */
-  @keyframes winnerGlow {
-    0% { box-shadow: 0 0 6px 0px #dcb3ff; }
-    50% { box-shadow: 0 0 15px 6px #dcb3ff; }
-    100% { box-shadow: 0 0 6px 0px #dcb3ff; }
-  }
-  .animate-winner {
-    animation: winnerGlow 1.2s ease-in-out 1 forwards;
-  }
-
-  /* Responsive styling for mobile */
-  @media (max-width: 600px) {
-    body {
-      height: 100vh;
-      font-size: 14px;
-    }
-    main {
-      padding: 0 0.3rem 0.8rem 0.3rem;
-    }
-    .hub {
-      max-width: 320px;
-      padding: 1rem;
-      margin: 0.8rem auto;
-    }
-    .hub label {
-      font-size: 0.9rem;
-    }
-    .hub input[type="text"],
-    .hub input[type="number"] {
-      font-size: 0.9rem;
-      padding: 0.5rem 0.6rem;
-    }
-    .hub button {
-      font-size: 1rem;
-      padding: 0.7rem 0;
-      border-radius: 8px;
-    }
-    .participants-inputs {
-      max-height: 180px;
-    }
-    .participant-input input {
-      font-size: 0.9rem;
-      padding: 0.45rem 0.6rem;
-    }
-    .bracket-container {
-      border-radius: 12px 0 0 12px;
-      padding: 0.3rem;
-      border-width: 1.5px;
-    }
-    .bracket {
-      gap: 20px;
-      min-width: 280px;
-    }
-    .round {
-      min-width: 70px;
-      gap: 25px;
-    }
-    .round-title {
-      font-size: 0.85rem;
-      margin-bottom: 12px;
-    }
-    .match {
-      min-width: 70px;
-      padding: 3px 6px;
-    }
-    .player {
-      font-size: 0.85rem;
-      padding: 3px 4px;
-    }
-    .player .arrow {
-      width: 12px;
-      height: 12px;
-      margin-left: 6px;
-    }
-    #winnerPopup .popup-content {
-      padding: 1.5rem 1.5rem 2rem 1.5rem;
-      max-width: 280px;
-    }
-    #winnerPopup .popup-content svg.trophy-icon {
-      width: 60px;
-      height: 60px;
-      margin-bottom: 0.75rem;
-    }
-    #winnerPopup h2 {
-      font-size: 2rem;
-      margin-bottom: 0.75rem;
-    }
-    #winnerPopup #winnerDesc {
-      font-size: 1rem;
-    }
-    #winnerPopup button.close-btn {
-      top: 0.4rem;
-      right: 0.4rem;
-      font-size: 1.4rem;
-    }
-  }
-  /* Scrollbar style for bracket container */
-  .bracket-container::-webkit-scrollbar {
-    height: 8px;
-  }
-  .bracket-container::-webkit-scrollbar-track {
-    background: rgba(255,255,255,0.1);
-    border-radius: 4px;
-  }
-  .bracket-container::-webkit-scrollbar-thumb {
-    background: #a880ffcc;
-    border-radius: 4px;
-  }
-  /* Scrollbar style for participants inputs */
-  .participants-inputs::-webkit-scrollbar {
-    width: 6px;
-  }
-  .participants-inputs::-webkit-scrollbar-track {
-    background: rgba(255,255,255,0.1);
-  }
-  .participants-inputs::-webkit-scrollbar-thumb {
-    background: #a880ffcc;
-    border-radius: 3px;
-  }
-
-  /* Winner popup overlay */
-  #winnerPopup {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right:0;
-    bottom:0;
-    background: rgba(0,0,0,0.85);
+  .header {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 9999;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .header img {
+    width: 36px;
+    height: 36px;
+    filter: brightness(0) invert(1);
+  }
+  h1 {
+    font-weight: 700;
+    color: #8bc34a;
+    user-select: none;
+    font-size: 1.8rem;
+  }
+  .greeting {
+    font-size: 1rem;
+    color: #c8e6c9;
+    margin-bottom: 28px;
+    user-select: none;
+    text-align: center;
+    width: 100%;
+    font-weight: 500;
+  }
+  .button-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+  }
+  button.option-btn {
+    background: #2c2c2c;
+    border: none;
+    border-radius: 10px;
+    color: #ddd;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.15s ease;
+    user-select: none;
+    box-shadow: 0 0 6px rgba(139, 195, 74, 0.4);
+    width: 100%;
+    text-align: left;
+  }
+  button.option-btn img {
+    height: 28px;
+    width: 28px;
+    margin-right: 15px;
+    filter: brightness(0) invert(1);
+    flex-shrink: 0;
+  }
+  button.option-btn:hover,
+  button.option-btn:focus {
+    background: #346a0b;
+    outline: none;
+    transform: scale(1.05);
+    color: #f1f8e9;
+  }
+  button.locked {
+    filter: grayscale(0.7);
+    opacity: 0.6;
+  }
+  button.locked:hover,
+  button.locked:focus {
+    background: #2c2c2c;
+    transform: none;
+    color: #ddd;
+    cursor: default;
+  }
+  /* Popup for notifications */
+  #popup {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: #8bc34a;
+    padding: 14px 24px;
+    border-radius: 24px;
+    font-weight: 600;
+    font-size: 1rem;
+    box-shadow: 0 0 15px #8bc34acc;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
-    flex-direction: column;
-    padding: 1rem;
-    text-align: center;
+    z-index: 10000;
   }
-  #winnerPopup.show {
+  #popup.show {
     opacity: 1;
-    pointer-events: all;
+    pointer-events: auto;
   }
-  #winnerPopup .popup-content {
-    background: linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%);
-    color: #fff;
-    padding: 2rem 2rem 3rem 2rem;
-    border-radius: 20px;
-    box-shadow: 0 10px 40px #651fffcc;
-    max-width: 320px;
-    width: 90%;
-    user-select: none;
-    position: relative;
-  }
-  #winnerPopup .popup-content svg.trophy-icon {
-    width: 72px;
-    height: 72px;
-    margin: 0 auto 1rem auto;
-    fill: #fff;
-    filter: drop-shadow(0 0 8px #a880ffcc);
-  }
-  #winnerPopup h2 {
-    font-size: 2.5rem;
-    margin: 0 0 1rem 0;
-    user-select: text;
-    text-shadow: 0 0 8px #fff;
-  }
-  #winnerPopup .confetti {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0; left: 0;
-    pointer-events: none;
-    overflow: visible;
-    z-index: 0;
-  }
-
-  #winnerPopup button.close-btn {
-    position: absolute;
-    top: 0.6rem;
-    right: 0.6rem;
-    background: transparent;
-    border: none;
-    font-size: 1.8rem;
-    color: #fff;
-    cursor: pointer;
-    font-weight: 700;
-    line-height: 1;
-    padding: 0;
-    user-select: none;
-    transition: color 0.3s ease;
-    z-index: 2;
-  }
-  #winnerPopup button.close-btn:hover {
-    color: #ff6b6b;
-  }
-
-  /* Confetti pieces */
-  .confetti-piece {
-    position: absolute;
-    width: 8px;
-    height: 14px;
-    background-color: #fff;
-    opacity: 0.9;
-    border-radius: 3px;
-    animation: confettiFall 3s forwards ease-in;
-  }
-  .confetti-piece:nth-child(odd) {
-    background-color: #a880ff;
-  }
-  .confetti-piece:nth-child(even) {
-    background-color: #e080ff;
-  }
-
-  @keyframes confettiFall {
-    0% {
-      transform: translate3d(0, 0, 0) rotate(0deg);
-      opacity: 1;
+  @media (max-width: 400px) {
+    .hub-container {
+      max-width: 100%;
+      padding: 20px 16px 80px; /* extra bottom for popup on mobile */
     }
-    100% {
-      transform: translate3d(0, 300px, 0) rotate(360deg);
-      opacity: 0;
+    button.option-btn {
+      font-size: 0.9rem;
+      padding: 10px 15px;
+    }
+    button.option-btn img {
+      height: 24px;
+      width: 24px;
+      margin-right: 12px;
+    }
+    .header img {
+      width: 28px;
+      height: 28px;
+    }
+    .greeting {
+      font-size: 0.9rem;
+      margin-bottom: 24px;
     }
   }
 </style>
 </head>
 <body>
-<header>Tournament Bracket</header>
-
-<main>
-  <section class="hub" id="hub">
-    <label for="tournamentName">Tournament Name</label>
-    <input type="text" id="tournamentName" placeholder="Enter tournament name" autocomplete="off" />
-    <label for="slotCount">Number of Slots (2 to 32)</label>
-    <input type="number" id="slotCount" min="2" max="32" step="1" placeholder="Enter number of slots" autocomplete="off" />
-    <button id="setParticipantsBtn">Set Participants</button>
-    <div class="error-message" id="hubError"></div>
-
-    <div id="participantsInputsContainer" style="display:none;">
-      <label>Enter Participant Names</label>
-      <div class="participants-inputs" id="participantsInputs"></div>
-      <button id="startTournamentBtn" style="margin-top: 0;">Start Tournament</button>
+  <div class="hub-container" role="main" aria-label="Dashboard Hub">
+    <div class="header">
+      <img src="https://img.icons8.com/ios-filled/50/8bc34a/businessman.png" alt="Profile Logo" />
+      <h1>Dashboard Hub</h1>
     </div>
-  </section>
-
-  <section class="bracket-container" id="bracketContainer" style="display:none;">
-    <h2 id="tournamentTitle" style="text-align:center;margin:0 0 1rem 0; font-weight:700; text-shadow: 1px 1px 3px rgba(0,0,0,0.6);"></h2>
-    <div class="bracket" id="bracket"></div>
-    <button id="resetBtn" style="margin: 1rem auto; display: block; background: #ff6b6b; border-radius: 12px; padding: 0.6rem 1rem; font-weight:700; font-size:1rem; box-shadow: 0 5px 15px #ff6b6bbb; border:none; cursor:pointer; color:#fff;">Reset Tournament</button>
-  </section>
-</main>
-
-<!-- Winner popup -->
-<div id="winnerPopup" role="dialog" aria-modal="true" aria-labelledby="winnerTitle" aria-describedby="winnerDesc">
-  <div class="popup-content">
-    <button class="close-btn" aria-label="Close winner popup">&times;</button>
-    <!-- Trophy SVG -->
-    <svg class="trophy-icon" viewBox="0 0 64 64" aria-hidden="true">
-      <path d="M20 6h24v6a14 14 0 01-24 0V6zm-6 12v6a18 18 0 0036 0v-6H42v6a10 10 0 01-20 0v-6H14zm0 18h36v4a6 6 0 01-6 6H26a6 6 0 01-6-6v-4z"/>
-      <path d="M22 48h20v6H22z"/>
-      <circle cx="32" cy="54" r="4" />
-    </svg>
-    <h2 id="winnerTitle"></h2>
-    <div id="winnerDesc" style="font-size:1.15rem; margin-top:0.3rem; user-select: text;">Congratulations on your win!</div>
-    <div class="confetti"></div>
+    <div class="greeting" id="greetingText"></div>
+    <div class="button-list">
+      <button class="option-btn locked" id="profileBtn" aria-label="Open Profile Page">
+        <img src="https://img.icons8.com/material-outlined/48/ffffff/document.png" alt="Profile Page Icon" />
+        Profile Page
+      </button>
+      <button class="option-btn" id="verificationBtn" aria-label="Open Verification Page">
+        <img src="https://img.icons8.com/material-outlined/48/ffffff/checked--v1.png" alt="Verification Icon" />
+        Verification Page
+      </button>
+      <button class="option-btn locked" id="tiktokBtn" aria-label="Open TikTok feature">
+        <img src="https://img.icons8.com/ios-filled/50/ffffff/tiktok.png" alt="TikTok Icon" />
+        TikTok
+      </button>
+      <button class="option-btn locked" id="hubgameBtn" aria-label="Open Hubgame feature">
+        <img src="https://img.icons8.com/material-outlined/48/ffffff/controller.png" alt="Hubgame Icon" />
+        Hubgame
+      </button>
+      <button class="option-btn locked" id="serveripBtn" aria-label="Open Server IP feature">
+        <img src="https://img.icons8.com/material-outlined/48/ffffff/server.png" alt="Server IP Icon" />
+        Server IP
+      </button>
+      <button class="option-btn locked" id="websiteBtn" aria-label="Open Website Feature">
+        <img src="https://img.icons8.com/material-outlined/48/ffffff/internet.png" alt="Website Feature Icon" />
+        Website Feature
+      </button>
+    </div>
   </div>
-</div>
+
+  <div id="popup" role="alert" aria-live="assertive"></div>
 
 <script>
-  (() => {
-    const hubSection = document.getElementById('hub');
-    const bracketSection = document.getElementById('bracketContainer');
-    const bracketDiv = document.getElementById('bracket');
-    const tournamentTitle = document.getElementById('tournamentTitle');
-    const errorDiv = document.getElementById('hubError');
-    const startBtn = document.getElementById('startTournamentBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const tournamentNameInput = document.getElementById('tournamentName');
-    const slotCountInput = document.getElementById('slotCount');
-    const setParticipantsBtn = document.getElementById('setParticipantsBtn');
-    const participantsInputsContainer = document.getElementById('participantsInputsContainer');
-    const participantsInputsDiv = document.getElementById('participantsInputs');
+  const username = localStorage.getItem('username') || 'User';
+  const greetingElem = document.getElementById('greetingText');
+  greetingElem.textContent = `Hi, ${username}, what do you want to see?`;
 
-    // Winner popup elements
-    const winnerPopup = document.getElementById('winnerPopup');
-    const winnerTitle = document.getElementById('winnerTitle');
-    const confettiContainer = winnerPopup.querySelector('.confetti');
-    const closePopupBtn = winnerPopup.querySelector('.close-btn');
+  const popup = document.getElementById('popup');
 
-    let tournamentName = '';
-    let slotCount = 8;
-    let rounds = 0;
-    let matches = [];
-    let participants = [];
-    let winnerTimeout = null;
+  // Elements
+  const buttons = {
+    profile: document.getElementById('profileBtn'),
+    verification: document.getElementById('verificationBtn'),
+    tiktok: document.getElementById('tiktokBtn'),
+    hubgame: document.getElementById('hubgameBtn'),
+    serverip: document.getElementById('serveripBtn'),
+    website: document.getElementById('websiteBtn'),
+  };
 
-    function isValidSlots(n) {
-      return n >= 2 && n <= 32;
+  function isVerified() {
+    return localStorage.getItem('verified') === 'true';
+  }
+
+  function showPopup(message) {
+    popup.textContent = message;
+    popup.classList.add('show');
+    setTimeout(() => popup.classList.remove('show'), 3000);
+  }
+
+  function goTo(url, external = false) {
+    if (external) {
+      window.open(url, '_blank', 'noopener');
+    } else {
+      window.location.href = url;
     }
+  }
 
-    function nextPowerOfTwo(num) {
-      if (num < 1) return 1;
-      return 2 ** Math.ceil(Math.log2(num));
-    }
+  function setupButtons() {
+    const verified = isVerified();
 
-    function createEl(tag, className = '', text = '') {
-      const el = document.createElement(tag);
-      if (className) el.className = className;
-      if (text) el.textContent = text;
-      return el;
-    }
+    if (!verified) {
+      buttons.verification.classList.remove('locked');
+      buttons.verification.onclick = () => goTo('wa.html');
 
-    function createParticipantInputs(count) {
-      participantsInputsDiv.innerHTML = '';
-      for (let i = 0; i < count; i++) {
-        const div = createEl('div', 'participant-input');
-        const input = createEl('input');
-        input.type = 'text';
-        input.placeholder = `Participant ${i + 1}`;
-        input.autocomplete = 'off';
-        input.dataset.index = i;
-        div.appendChild(input);
-        participantsInputsDiv.appendChild(div);
-      }
-    }
+      buttons.profile.classList.add('locked');
+      buttons.profile.onclick = () => showPopup('Verification first to open the feature');
 
-    function buildRoundsWithParticipants(origParticipants) {
-      const actualCount = origParticipants.length;
-      const totalSlots = nextPowerOfTwo(actualCount);
-      rounds = Math.log2(totalSlots);
-      const allRounds = [];
-      let currentMatchesCount = totalSlots / 2;
-
-      const participantsList = origParticipants.slice();
-      while (participantsList.length < totalSlots) participantsList.push(null);
-
-      // Build first round matches
-      let thisRoundMatches = [];
-      for (let i = 0; i < currentMatchesCount; i++) {
-        const player1 = participantsList[2 * i];
-        const player2 = participantsList[2 * i + 1];
-        let match = {
-          id: `R1M${i + 1}`,
-          players: [player1, player2],
-          winnerIndex: null,
-          isByeMatch: false,
-        };
-        if (player1 && !player2) {
-          match.winnerIndex = 0;
-          match.isByeMatch = true;
-        } else if (!player1 && player2) {
-          match.winnerIndex = 1;
-          match.isByeMatch = true;
-        }
-        thisRoundMatches.push(match);
-      }
-      allRounds.push(thisRoundMatches);
-
-      // Build subsequent rounds
-      for (let r = 1; r < rounds; r++) {
-        const matchesCount = currentMatchesCount / 2;
-        const round = [];
-        for (let m = 0; m < matchesCount; m++) {
-          round.push({
-            id: `R${r + 1}M${m + 1}`,
-            players: [null, null],
-            winnerIndex: null,
-            isByeMatch: false,
-          });
-        }
-        allRounds.push(round);
-        currentMatchesCount = matchesCount;
-      }
-
-      propagateByes(allRounds);
-
-      return allRounds;
-    }
-
-    function propagateByes(roundsArr) {
-      for (let r = 0; r < roundsArr.length - 1; r++) {
-        let currRound = roundsArr[r];
-        let nextRound = roundsArr[r + 1];
-        for (let i = 0; i < currRound.length; i++) {
-          const match = currRound[i];
-          if (match.winnerIndex !== null) {
-            const nextMatchIndex = Math.floor(i / 2);
-            const playerIndexInNextMatch = i % 2;
-            const winnerName = match.players[match.winnerIndex] || null;
-            if (winnerName) {
-              const nextMatch = nextRound[nextMatchIndex];
-              nextMatch.players[playerIndexInNextMatch] = winnerName;
-              if (nextMatch.players[0] && !nextMatch.players[1]) {
-                nextMatch.winnerIndex = 0;
-                nextMatch.isByeMatch = true;
-              } else if (!nextMatch.players[0] && nextMatch.players[1]) {
-                nextMatch.winnerIndex = 1;
-                nextMatch.isByeMatch = true;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    function createArrowIcon() {
-      const svgNS = "http://www.w3.org/2000/svg";
-      const svg = document.createElementNS(svgNS, "svg");
-      svg.setAttributeNS(null, 'viewBox', '0 0 24 24');
-      svg.classList.add('arrow');
-      const path = document.createElementNS(svgNS, "path");
-      path.setAttributeNS(null, 'd', 'M8 5v14l11-7z');
-      svg.appendChild(path);
-      return svg;
-    }
-
-    function renderBracket() {
-      bracketDiv.innerHTML = '';
-      const numRounds = matches.length;
-
-      for (let r = 0; r < numRounds; r++) {
-        const round = matches[r];
-        const roundDiv = createEl('div', 'round');
-        const roundName = r === numRounds - 1 ? 'Final' : `Round ${r + 1}`;
-        const roundTitle = createEl('div', 'round-title', roundName);
-        roundDiv.appendChild(roundTitle);
-
-        for (let m = 0; m < round.length; m++) {
-          const match = round[m];
-          const matchDiv = createEl('div', 'match');
-          if (match.winnerIndex !== null) {
-            matchDiv.classList.add('winner-selected');
-          }
-          if (match.isByeMatch) {
-            matchDiv.classList.add('bye-match');
-          }
-          matchDiv.setAttribute('data-round', r);
-          matchDiv.setAttribute('data-match', m);
-          for (let p = 0; p < 2; p++) {
-            const playerNameRaw = match.players[p];
-            const playerName = playerNameRaw || (match.isByeMatch ? 'BYE' : '--');
-            const playerDiv = createEl('div', 'player', playerName);
-            if (match.winnerIndex === p) {
-              playerDiv.classList.add('winner');
-            }
-            if (!playerNameRaw && !match.isByeMatch) {
-              playerDiv.style.opacity = '0.3';
-              playerDiv.style.cursor = 'default';
-              playerDiv.classList.add('no-arrow');
-            } else {
-              if (!match.isByeMatch) {
-                playerDiv.classList.add('clickable');
-                playerDiv.tabIndex = 0;
-                playerDiv.setAttribute('data-player-index', p);
-              } else {
-                playerDiv.style.cursor = 'default';
-                playerDiv.classList.add('no-arrow');
-              }
-            }
-            const arrowSvg = createArrowIcon();
-            playerDiv.appendChild(arrowSvg);
-            matchDiv.appendChild(playerDiv);
-          }
-          roundDiv.appendChild(matchDiv);
-        }
-        bracketDiv.appendChild(roundDiv);
-      }
-    }
-
-    function showWinnerPopup(winnerName) {
-      winnerTitle.textContent = winnerName;
-      winnerPopup.classList.add('show');
-      createConfetti(30);
-
-      if (winnerTimeout) clearTimeout(winnerTimeout);
-      winnerTimeout = setTimeout(closeWinnerPopup, 7000);
-    }
-
-    function closeWinnerPopup() {
-      winnerPopup.classList.remove('show');
-      confettiContainer.innerHTML = '';
-      if (winnerTimeout) {
-        clearTimeout(winnerTimeout);
-        winnerTimeout = null;
-      }
-    }
-
-    function createConfetti(num) {
-      confettiContainer.innerHTML = '';
-      for (let i = 0; i < num; i++) {
-        const confetti = createEl('div', 'confetti-piece');
-        confetti.style.left = Math.random() * 100 + '%';
-        confetti.style.top = (Math.random() * 50) - 20 + '%';
-        confetti.style.animationDelay = (Math.random() * 3) + 's';
-        confetti.style.backgroundColor = (i % 2 === 0) ? '#a880ff' : '#e080ff';
-        confetti.style.transform = '\`rotate(\${Math.random()*360}deg)\`;'
-        confettiContainer.appendChild(confetti);
-      }
-    }
-
-    function propagateWinner(roundIndex, matchIndex, winnerIndex) {
-      if (roundIndex === matches.length - 1) {
-        const winnerName = matches[roundIndex][matchIndex].players[winnerIndex];
-        setTimeout(() => {
-          showWinnerPopup(winnerName);
-        }, 1400);
-        return;
-      }
-      const nextRound = roundIndex + 1;
-      const nextMatchIndex = Math.floor(matchIndex / 2);
-      const playerIndexInNextMatch = matchIndex % 2;
-      const winnerName = matches[roundIndex][matchIndex].players[winnerIndex];
-      matches[nextRound][nextMatchIndex].players[playerIndexInNextMatch] = winnerName;
-      matches[nextRound][nextMatchIndex].winnerIndex = null;
-      matches[nextRound][nextMatchIndex].isByeMatch = false;
-      const nextMatch = matches[nextRound][nextMatchIndex];
-      if (nextMatch.players[0] && !nextMatch.players[1]) {
-        nextMatch.winnerIndex = 0;
-        nextMatch.isByeMatch = true;
-      } else if (!nextMatch.players[0] && nextMatch.players[1]) {
-        nextMatch.winnerIndex = 1;
-        nextMatch.isByeMatch = true;
-      }
-    }
-
-    function onPlayerClick(roundIndex, matchIndex, playerIndex, playerEl) {
-      const match = matches[roundIndex][matchIndex];
-      if (!match.players[playerIndex]) return;
-      if (match.winnerIndex === playerIndex) return;
-      if (!match.players[0] || !match.players[1]) return;
-      if (match.isByeMatch) return;
-
-      match.winnerIndex = playerIndex;
-
-      playerEl.classList.add('animate-winner');
-      setTimeout(() => {
-        playerEl.classList.remove('animate-winner');
-        renderBracket();
-        bindPlayerClickEvents();
-      }, 1200);
-
-      propagateWinner(roundIndex, matchIndex, playerIndex);
-
-      setTimeout(() => {
-        renderBracket();
-        bindPlayerClickEvents();
-      }, 1250);
-    }
-
-    function bindPlayerClickEvents() {
-      const playerEls = bracketDiv.querySelectorAll('.player.clickable');
-      playerEls.forEach(playerEl => {
-        playerEl.addEventListener('click', () => {
-          const matchDiv = playerEl.parentElement;
-          const roundIndex = parseInt(matchDiv.getAttribute('data-round'));
-          const matchIndex = parseInt(matchDiv.getAttribute('data-match'));
-          const playerIndex = parseInt(playerEl.getAttribute('data-player-index'));
-
-          onPlayerClick(roundIndex, matchIndex, playerIndex, playerEl);
-        });
-        playerEl.addEventListener('keydown', e => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            playerEl.click();
-          }
-        });
+      ['tiktok', 'hubgame', 'serverip', 'website'].forEach(key => {
+        buttons[key].classList.add('locked');
+        buttons[key].onclick = () => showPopup('Verification first to open the feature');
       });
-    }
 
-    function setParticipants() {
-      errorDiv.textContent = '';
-      tournamentName = tournamentNameInput.value.trim();
-      if (tournamentName.length === 0) {
-        errorDiv.textContent = 'Please enter a tournament name.';
-        return;
-      }
-      let slots = parseInt(slotCountInput.value);
-      if (!isValidSlots(slots)) {
-        errorDiv.textContent = 'Slots must be between 2 and 32.';
-        return;
-      }
-      slotCount = slots;
-      createParticipantInputs(slotCount);
-      participantsInputsContainer.style.display = 'block';
-      setParticipantsBtn.disabled = true;
-      slotCountInput.disabled = true;
-      tournamentNameInput.disabled = true;
-      errorDiv.textContent = '';
-    }
-
-    function startTournament() {
-      errorDiv.textContent = '';
-      participants = [];
-      const inputs = participantsInputsDiv.querySelectorAll('input');
-      for (let i = 0; i < inputs.length; i++) {
-        const val = inputs[i].value.trim();
-        if (val.length === 0) {
-          errorDiv.textContent = '\`Please enter a name for Participant \${i + 1}.\`;'
-          return;
-        }
-        participants.push(val);
-      }
-      rounds = 0;
-      matches = buildRoundsWithParticipants(participants);
-
-      tournamentTitle.textContent = tournamentName;
-      hubSection.style.display = 'none';
-      bracketSection.style.display = 'block';
-
-      renderBracket();
-      bindPlayerClickEvents();
-    }
-
-    function resetAll() {
-      tournamentNameInput.value = '';
-      slotCountInput.value = '';
-      setParticipantsBtn.disabled = false;
-      slotCountInput.disabled = false;
-      tournamentNameInput.disabled = false;
-      participantsInputsContainer.style.display = 'none';
-      participantsInputsDiv.innerHTML = '';
-      bracketDiv.innerHTML = '';
-      tournamentTitle.textContent = '';
-      matches = [];
-      participants = [];
-      hubSection.style.display = 'block';
-      bracketSection.style.display = 'none';
-      errorDiv.textContent = '';
-      closeWinnerPopup();
-    }
-
-    closePopupBtn.addEventListener('click', closeWinnerPopup);
-    setParticipantsBtn.addEventListener('click', setParticipants);
-    startBtn.addEventListener('click', startTournament);
-    resetBtn.addEventListener('click', resetAll);
-
-    [tournamentNameInput, slotCountInput].forEach(input => {
-      input.addEventListener('keydown', e => {
-        if (e.key === 'Enter') {
-          setParticipants();
-        }
+    } else {
+      Object.entries(buttons).forEach(([key, btn]) => {
+        btn.classList.remove('locked');
       });
-    });
+      buttons.profile.onclick = () => goTo('profile.html');
+      buttons.verification.onclick = () => goTo('wa.html');
+      buttons.tiktok.onclick = () => goTo('https://www.tiktok.com', true);
+      buttons.hubgame.onclick = () => goTo('hub_game.html');
+      buttons.serverip.onclick = () => goTo('ip_server.html');
+      buttons.website.onclick = () => goTo('websitefeature.html');
+    }
+  }
 
-    resetAll();
-  })();
+  window.onload = () => {
+    setupButtons();
+  };
 </script>
 </body>
 </html>
-undifined
