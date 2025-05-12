@@ -156,7 +156,7 @@
     backButton.addEventListener('click', function() {
       // When clicked, open the dashboard page.
       // Replace 'index.html' below with your actual dashboard URL if different.
-      window.location.href = 'dashboard.html';
+      window.location.href = 'inex.html';
     });
 
     form.addEventListener('submit', function(event) {
@@ -193,7 +193,7 @@
            // Set verified flag and redirect to dashboard after success
            localStorage.setItem('verified', 'true');
            setTimeout(() => {
-             window.location.href = 'dashboard.html';
+             window.location.href = 'index.html';
            }, 1500);
         }, function(error) {
            console.error('Failed to send email:', error);
