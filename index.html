@@ -190,7 +190,6 @@
 </style>
 </head>
 <body>
-  <button id="back-btn" aria-label="Back to Game Hub">Back</button>
   <div id="app" role="main" aria-live="polite" aria-atomic="true">
     <div id="game-container" aria-label="Puzzle Quest game">
       <header>
@@ -461,10 +460,6 @@
     score = 0;
     saveScore();
     initBoard();
-  });
-
-  backBtn.addEventListener('click', () => {
-    window.location.href = 'index.html';
   });
 
   loadScore();
