@@ -526,10 +526,8 @@
   }
 
   function renderLeaderboard(list) {
-  function renderLeaderboard() {
     leaderboardScores.innerHTML = '';
     if(list.length === 0) {
-    if(score <= 0) {
       const li = document.createElement('li');
       li.textContent = 'No scores recorded yet.';
       li.style.fontStyle = 'italic';
@@ -550,16 +548,9 @@
     if(confirm('Are you sure you want to clear the leaderboard? This will remove all scores.')) {
       database.ref('leaderboard').remove();
     }
-    const li = document.createElement('li');
-    li.textContent = `1. ${playerName}`;
-    const scoreSpan = document.createElement('span');
-    scoreSpan.textContent = score.toString();
-    li.appendChild(scoreSpan);
-    leaderboardScores.appendChild(li);
   }
 
   function showLeaderboard() {
-    renderLeaderboard();
     leaderboardModal.classList.add('show');
     leaderboardModal.setAttribute('aria-hidden', 'false');
     leaderboardModal.focus();
@@ -575,37 +566,44 @@
   function createTile(row, col, colorIndex) {
     const tile = document.createElement('div');
     tile.classList.add('tile', `color-${colorIndex}`);
-@@ -580,15 +543,15 @@ <h2 id="login-header">Enter Your Name</h2>
+    tile.dataset.row = row;
+    tile.dataset.col = col;
+    tile.dataset.color = colorIndex;
+    tile.setAttribute('role', 'button');
+    tile.setAttribute('tabindex', '0');
+    tile.setAttribute('aria-label', `Fruit tile ${fruitEmojis[colorIndex]}`);
+    tile.textContent = fruitEmojis[colorIndex];
+    tile.addEventListener('click', onTileClick);
+    tile.addEventListener('keydown', onTileKeyDown);
+    return tile;
+  }
 
   function initBoard() {
     grid = [];
     for(let r=0; r<ROWS; r++){
-    for (let r = 0; r < ROWS; r++) {
       let row = [];
       for(let c=0; c<COLS; c++){
-      for (let c = 0; c < COLS; c++) {
         let color;
         do {
           color = Math.floor(Math.random()*COLORS_COUNT);
-          color = Math.floor(Math.random() * COLORS_COUNT);
         } while (
           (c >= 2 && color === row[c-1] && color === row[c-2]) ||
           (r >= 2 && color === grid[r-1][c] && color === grid[r-2][c])
-          (c >= 2 && color === row[c - 1] && color === row[c - 2]) ||
-          (r >= 2 && color === grid[r - 1][c] && color === grid[r - 2][c])
         );
         row.push(color);
       }
-@@ -601,28 +564,28 @@ <h2 id="login-header">Enter Your Name</h2>
+      grid.push(row);
+    }
+    renderBoard();
+    loadScore();
+    selectedTile = null;
+  }
 
   function renderBoard() {
     board.innerHTML = '';
     for(let r=0; r<ROWS; r++){
       for(let c=0; c<COLS; c++){
         board.appendChild(createTile(r,c,grid[r][c]));
-    for (let r = 0; r < ROWS; r++) {
-      for (let c = 0; c < COLS; c++) {
-        board.appendChild(createTile(r, c, grid[r][c]));
       }
     }
   }
@@ -613,13 +611,11 @@
   function updateScore(points) {
     score += points;
     if(score < 0) score = 0;
-    if (score < 0) score = 0;
     scoreBoard.textContent = 'Score: ' + score;
     saveScore();
   }
 
   function isAdjacent(r1,c1,r2,c2) {
-  function isAdjacent(r1, c1, r2, c2) {
     return (
       (r1 === r2 && Math.abs(c1 - c2) === 1) ||
       (c1 === c2 && Math.abs(r1 - r2) === 1)
@@ -627,84 +623,69 @@
   }
 
   function swapTiles(r1,c1,r2,c2) {
-  function swapTiles(r1, c1, r2, c2) {
     const temp = grid[r1][c1];
     grid[r1][c1] = grid[r2][c2];
     grid[r2][c2] = temp;
-@@ -639,75 +602,75 @@ <h2 id="login-header">Enter Your Name</h2>
+
+    const tile1 = board.querySelector(`.tile[data-row="${r1}"][data-col="${c1}"]`);
+    const tile2 = board.querySelector(`.tile[data-row="${r2}"][data-col="${c2}"]`);
+
+    tile1.dataset.color = grid[r1][c1];
+    tile2.dataset.color = grid[r2][c2];
+
+    tile1.textContent = fruitEmojis[grid[r1][c1]];
+    tile2.textContent = fruitEmojis[grid[r2][c2]];
+  }
 
   function findMatches() {
     let matches = [];
     for(let r=0; r<ROWS; r++) {
-    for (let r = 0; r < ROWS; r++) {
       let count = 1;
       for(let c=1; c<COLS; c++) {
         if(grid[r][c] === grid[r][c-1]) {
-      for (let c = 1; c < COLS; c++) {
-        if (grid[r][c] === grid[r][c - 1]) {
           count++;
         } else {
           if(count >=3) {
             for(let k=0; k<count; k++) {
               matches.push({r: r, c: c-1-k});
-          if (count >= 3) {
-            for (let k = 0; k < count; k++) {
-              matches.push({ r: r, c: c - 1 - k });
             }
           }
           count =1;
-          count = 1;
         }
       }
       if(count >= 3) {
         for(let k=0; k<count; k++) {
           matches.push({r: r, c: COLS-1-k});
-      if (count >= 3) {
-        for (let k = 0; k < count; k++) {
-          matches.push({ r: r, c: COLS - 1 - k });
         }
       }
     }
     for(let c=0; c<COLS; c++) {
-    for (let c = 0; c < COLS; c++) {
       let count = 1;
       for(let r=1; r<ROWS; r++) {
         if(grid[r][c] === grid[r-1][c]) {
-      for (let r = 1; r < ROWS; r++) {
-        if (grid[r][c] === grid[r - 1][c]) {
           count++;
         } else {
           if(count >=3) {
             for(let k=0; k<count; k++) {
               matches.push({r: r-1-k, c: c});
-          if (count >= 3) {
-            for (let k = 0; k < count; k++) {
-              matches.push({ r: r - 1 - k, c: c });
             }
           }
           count =1;
-          count = 1;
         }
       }
       if(count >= 3) {
         for(let k=0; k<count; k++) {
           matches.push({r: ROWS-1-k, c: c});
-      if (count >= 3) {
-        for (let k = 0; k < count; k++) {
-          matches.push({ r: ROWS - 1 - k, c: c });
         }
       }
     }
     const uniqueMatches = [];
     const seen = new Set();
     matches.forEach(({r,c}) => {
-    matches.forEach(({ r, c }) => {
       const key = r + ',' + c;
       if(!seen.has(key)) {
-      if (!seen.has(key)) {
         seen.add(key);
         uniqueMatches.push({r,c});
-        uniqueMatches.push({ r, c });
       }
     });
     return uniqueMatches;
@@ -713,70 +694,60 @@
   function removeMatchesAndCollapse(matches) {
     if(matches.length === 0) return false;
     matches.forEach(({r,c}) => {
-    if (matches.length === 0) return false;
-    matches.forEach(({ r, c }) => {
       grid[r][c] = null;
     });
     updateScore(matches.length * 10);
     for(let c=0; c<COLS; c++) {
-    for (let c = 0; c < COLS; c++) {
       let newCol = [];
       for(let r=ROWS-1; r>=0; r--) {
         if(grid[r][c] !== null) {
-      for (let r = ROWS - 1; r >= 0; r--) {
-        if (grid[r][c] !== null) {
           newCol.push(grid[r][c]);
         }
       }
       while(newCol.length < ROWS) {
-      while (newCol.length < ROWS) {
         newCol.push(Math.floor(Math.random() * COLORS_COUNT));
       }
       for(let r=ROWS-1,i=0; r>=0; r--,i++) {
-      for (let r = ROWS - 1, i = 0; r >= 0; r--, i++) {
         grid[r][c] = newCol[i];
       }
     }
-@@ -719,17 +682,17 @@ <h2 id="login-header">Enter Your Name</h2>
+    renderBoard();
+    return true;
+  }
+
+  function onTileClick(event) {
     const tile = event.currentTarget;
     const r = parseInt(tile.dataset.row);
     const c = parseInt(tile.dataset.col);
     if(selectedTile === null) {
       selectTile(r,c,tile);
-    if (selectedTile === null) {
-      selectTile(r, c, tile);
     } else {
       if(r === selectedTile.r && c === selectedTile.c) {
-      if (r === selectedTile.r && c === selectedTile.c) {
         deselectTile();
       } else if(isAdjacent(r,c,selectedTile.r,selectedTile.c)) {
         swapTiles(r,c,selectedTile.r,selectedTile.c);
-      } else if (isAdjacent(r, c, selectedTile.r, selectedTile.c)) {
-        swapTiles(r, c, selectedTile.r, selectedTile.c);
         const matches = findMatches();
         if(matches.length === 0) {
-        if (matches.length === 0) {
           setTimeout(() => {
             swapTiles(r,c,selectedTile.r,selectedTile.c);
-            swapTiles(r, c, selectedTile.r, selectedTile.c);
             deselectTile();
           }, 300);
         } else {
-@@ -738,7 +701,7 @@ <h2 id="login-header">Enter Your Name</h2>
+          deselectTile();
+          chainRemove();
         }
       } else {
         deselectTile();
         selectTile(r,c,tile);
-        selectTile(r, c, tile);
       }
     }
   }
-@@ -747,67 +710,56 @@ <h2 id="login-header">Enter Your Name</h2>
+
+  function onTileKeyDown(event) {
     const tile = event.currentTarget;
     const r = parseInt(tile.dataset.row);
     const c = parseInt(tile.dataset.col);
     if(event.key === 'Enter' || event.key === ' ') {
-    if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       tile.click();
     }
@@ -784,14 +755,11 @@
 
   function selectTile(r,c,tileElement) {
     selectedTile = {r,c,element: tileElement};
-  function selectTile(r, c, tileElement) {
-    selectedTile = { r, c, element: tileElement };
     tileElement.classList.add('selected');
   }
 
   function deselectTile() {
     if(selectedTile) {
-    if (selectedTile) {
       selectedTile.element.classList.remove('selected');
       selectedTile = null;
     }
@@ -800,7 +768,6 @@
   function chainRemove() {
     const matches = findMatches();
     if(matches.length === 0) return;
-    if (matches.length === 0) return;
     removeMatchesAndCollapse(matches);
     setTimeout(chainRemove, 350);
   }
@@ -832,7 +799,6 @@
 
   backBtn.addEventListener('click', () => {
     window.location.href = 'hub_game.html';
-    window.location.href = 'login.html';
   });
 
   // Initialize on page load
@@ -841,9 +807,6 @@
   }
   startGame();
 
-  // Initialize
-  loadScore();
-  initBoard();
 })();
 </script>
 </body>
