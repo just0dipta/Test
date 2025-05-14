@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>Puzzle Quest</title>
 <style>
-  /* Reset */
   * { box-sizing: border-box; }
   html, body {
     margin: 0; padding: 0; height: 100%; overflow: hidden;
@@ -370,6 +369,7 @@
   let selectedTile = null;
   let score = 0;
   let playerName = 'Player';
+  let lastGameState = null;
 
   // DOM elements
   const nameModal = document.getElementById('name-modal');
@@ -394,19 +394,70 @@
   // Initialize game when page loads
   window.addEventListener('DOMContentLoaded', () => {
     const savedName = localStorage.getItem('puzzleQuestPlayerName');
+    const savedGame = localStorage.getItem('puzzleQuestLastGame');
+    
     if (savedName) {
-      // If we have a saved name, skip the name modal
       playerName = savedName;
       playerNameDisplay.textContent = `Player: ${playerName}`;
-      nameModal.style.display = 'none';
-      gameContainer.style.display = 'flex';
-      initGame();
+      
+      if (savedGame) {
+        try {
+          lastGameState = JSON.parse(savedGame);
+          score = lastGameState.score;
+          updateScoreDisplay();
+          
+          // Ask if player wants to continue
+          if (confirm(`Welcome back ${playerName}! You had a score of ${score}. Continue where you left off?`)) {
+            nameModal.style.display = 'none';
+            gameContainer.style.display = 'flex';
+            initBoardFromSave(lastGameState.grid);
+          } else {
+            // Start new game
+            localStorage.removeItem('puzzleQuestLastGame');
+            nameModal.style.display = 'none';
+            gameContainer.style.display = 'flex';
+            initGame();
+          }
+        } catch (e) {
+          console.error("Error loading saved game:", e);
+          localStorage.removeItem('puzzleQuestLastGame');
+          nameModal.style.display = 'none';
+          gameContainer.style.display = 'flex';
+          initGame();
+        }
+      } else {
+        // No saved game, start fresh
+        nameModal.style.display = 'none';
+        gameContainer.style.display = 'flex';
+        initGame();
+      }
     } else {
-      // Show name modal if no name is saved
+      // New player
       nameModal.style.display = 'flex';
       nameInput.focus();
     }
   });
+
+  function initBoardFromSave(savedGrid) {
+    grid = savedGrid;
+    renderBoard();
+    selectedTile = null;
+  }
+
+  function saveGameState() {
+    const gameState = {
+      score: score,
+      grid: grid,
+      timestamp: new Date().getTime()
+    };
+    localStorage.setItem('puzzleQuestLastGame', JSON.stringify(gameState));
+    
+    // Also update Firebase
+    database.ref('scores/' + playerName).set({
+      score: score,
+      updatedAt: firebase.database.ServerValue.TIMESTAMP
+    });
+  }
 
   // Name entry handling
   nameSubmit.addEventListener('click', () => {
@@ -505,12 +556,7 @@
     if (score < 0) score = 0;
     
     updateScoreDisplay();
-    
-    // Update Firebase with current score
-    database.ref('scores/' + playerName).set({
-      score: score,
-      updatedAt: firebase.database.ServerValue.TIMESTAMP
-    });
+    saveGameState();
   }
 
   // Helper functions
@@ -663,6 +709,7 @@
     deselectTile();
     score = 0;
     updateScoreDisplay();
+    localStorage.removeItem('puzzleQuestLastGame');
     initBoard();
   };
 
@@ -706,6 +753,13 @@
       leaderboardScores.appendChild(li);
     });
   }
+
+  // Save game when leaving the page
+  window.addEventListener('beforeunload', () => {
+    if (score > 0) {
+      saveGameState();
+    }
+  });
 })();
 </script>
 </body>
