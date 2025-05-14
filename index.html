@@ -3,69 +3,34 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-<title>Puzzle Quest Game with Firebase Leaderboard</title>
+<title>Puzzle Quest Game with Real-Time Firebase Leaderboard</title>
 <style>
-  /* Reset and base */
-  * {
-    box-sizing: border-box;
-  }
+  /* Styling same as previous example for brevity */
+  /* Reset */
+  * { box-sizing: border-box; }
   html, body {
     margin: 0; padding: 0; height: 100%; overflow: hidden;
-  }
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: #121217;
     color: #eee;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  body {
+    display: flex; align-items: center; justify-content: center;
     -webkit-tap-highlight-color: transparent;
-    position: relative;
-  }
-  #back-btn {
-    position: fixed;
-    top: 8px;
-    right: 8px;
-    z-index: 1100;
-    background: transparent;
-    border: none;
-    color: #bb86fc;
-    font-weight: 700;
-    font-size: 1rem;
-    padding: 5px 10px;
-    cursor: pointer;
-    border-radius: 8px;
-    user-select: none;
-    transition: background-color 0.3s ease, color 0.3s ease;
-    box-shadow:
-      0 0 6px #bb86fcbb,
-      0 0 20px #bb86fcaa inset;
-  }
-  #back-btn:hover, #back-btn:focus {
-    background-color: #5e42a6;
-    outline: none;
   }
   #game-container {
     background: #1e1e2f;
     border-radius: 16px;
-    box-shadow:
-      0 0 15px 2px #440099aa,
-      0 10px 25px rgba(0,0,0,0.9);
+    box-shadow: 0 0 15px 2px #440099aa, 0 10px 25px rgba(0,0,0,0.9);
     width: 340px;
-    max-width: 95vw;
     height: 600px;
     display: flex;
     flex-direction: column;
-    padding: 14px 14px;
+    padding: 16px;
     box-sizing: border-box;
     position: relative;
   }
-  header {
-    text-align: center;
-    margin-bottom: 8px;
-    user-select: none;
-    padding-right: 0;
-  }
+  header { text-align: center; margin-bottom: 8px; user-select: none; }
   header h1 {
     font-size: 1.8rem;
     letter-spacing: 2.5px;
@@ -113,20 +78,14 @@
     width: 44px;
     height: 44px;
     cursor: pointer;
-    position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
-    transition:
-      transform 0.25s cubic-bezier(0.4,0,0.2,1),
-      box-shadow 0.25s cubic-bezier(0.4,0,0.2,1),
-      background-color 0.3s ease,
-      border-color 0.3s ease;
-    box-shadow:
-      inset 0 1px 3px #666777aa;
-    border: 3px solid transparent;
     font-size: 1.7rem;
     user-select: none;
+    border: 3px solid transparent;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.3s ease;
+    box-shadow: inset 0 1px 3px #666777aa;
   }
   .tile.selected {
     outline: 3px solid #fff;
@@ -134,18 +93,18 @@
     transform: scale(1.1);
     z-index: 10;
   }
-  .tile.color-0 { border-color: #ff4c4c; }
-  .tile.color-1 { border-color: #f7a932; }
-  .tile.color-2 { border-color: #3bb3ff; }
-  .tile.color-3 { border-color: #40da47; }
-  .tile.color-4 { border-color: #ffd947; }
-  .tile.color-5 { border-color: #ac41ff; }
+  .tile.color-0 { border-color: #ff4c4c;}
+  .tile.color-1 { border-color: #f7a932;}
+  .tile.color-2 { border-color: #3bb3ff;}
+  .tile.color-3 { border-color: #40da47;}
+  .tile.color-4 { border-color: #ffd947;}
+  .tile.color-5 { border-color: #ac41ff;}
   #controls {
     margin-top: 8px;
     display: flex;
     justify-content: space-between;
   }
-  #reset-btn, #leaderboard-btn {
+  button {
     background: #bb86fc;
     color: #121217;
     border: none;
@@ -158,8 +117,8 @@
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
     user-select: none;
   }
-  #reset-btn:hover, #reset-btn:focus,
-  #leaderboard-btn:hover, #leaderboard-btn:focus {
+  button:hover,
+  button:focus {
     background: #9a6fff;
     box-shadow: 0 8px 18px #9a6fffcc;
     outline: none;
@@ -172,14 +131,13 @@
     user-select: none;
     line-height: 1.3;
   }
-
-  /* Leaderboard Modal */
   #leaderboard-modal {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) scale(0);
-    width: 280px;
+    width: 320px;
+    max-height: 80vh;
     background: #1e1e2f;
     border-radius: 16px;
     box-shadow: 0 0 20px #bb86fccc;
@@ -187,7 +145,6 @@
     z-index: 2000;
     transition: transform 0.3s ease;
     user-select: none;
-    max-height: 80vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -199,7 +156,7 @@
     background: #3b3d5c;
     padding: 14px;
     font-weight: 700;
-    font-size: 1.25rem;
+    font-size: 1.3rem;
     text-align: center;
     border-top-left-radius: 16px;
     border-top-right-radius: 16px;
@@ -216,7 +173,7 @@
     padding: 0;
   }
   #leaderboard-list li {
-    padding: 6px 0;
+    padding: 8px 4px;
     border-bottom: 1px solid #555577;
     font-size: 1.1rem;
     display: flex;
@@ -230,11 +187,11 @@
     background: #3b3d5c;
     padding: 10px 14px;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     border-bottom-left-radius: 16px;
     border-bottom-right-radius: 16px;
   }
-  #close-leaderboard, #clear-leaderboard {
+  #close-leaderboard {
     background: #bb86fc;
     border: none;
     border-radius: 12px;
@@ -246,67 +203,17 @@
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
     user-select: none;
   }
-  #close-leaderboard:hover, #clear-leaderboard:hover,
-  #close-leaderboard:focus, #clear-leaderboard:focus {
+  #close-leaderboard:hover,
+  #close-leaderboard:focus {
     background: #9a6fff;
     box-shadow: 0 6px 14px #9a6fffcc;
     outline: none;
   }
-  /* Login Modal */
-  #login-modal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(1);
-    width: 270px;
-    background: #1e1e2f;
-    border-radius: 16px;
-    box-shadow: 0 0 20px #bb86fccc;
-    color: #eee;
-    z-index: 3000;
-    display: flex;
-    flex-direction: column;
-    padding: 20px 16px 16px 16px;
-    user-select: none;
-  }
-  #login-modal h2 {
-    margin: 0 0 14px 0;
-    text-align: center;
-    font-weight: 700;
-    font-size: 1.4rem;
-  }
-  #login-modal input {
-    padding: 10px;
-    font-size: 1rem;
-    border-radius: 10px;
-    border: none;
-    outline: none;
-    margin-bottom: 12px;
-    user-select: text;
-  }
-  #login-modal button {
-    background: #bb86fc;
-    color: #121217;
-    border: none;
-    border-radius: 14px;
-    padding: 12px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 6px 14px #bb86fcaa;
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
-  }
-  #login-modal button:hover,
-  #login-modal button:focus {
-    background: #9a6fff;
-    box-shadow: 0 8px 18px #9a6fffcc;
-    outline: none;
-  }
-  @media (max-width: 360px) {
+  @media (max-width: 400px) {
     #game-container {
       width: 320px;
       height: 580px;
-      padding: 12px 12px;
+      padding: 12px;
     }
     header h1 {
       font-size: 1.6rem;
@@ -314,7 +221,7 @@
     #score-board {
       font-size: 1.1rem;
     }
-    #reset-btn, #leaderboard-btn {
+    button {
       font-size: 0.9rem;
       padding: 8px 16px;
     }
@@ -329,61 +236,45 @@
     #leaderboard-modal {
       width: 90vw;
     }
-    #login-modal {
-      width: 90vw;
-    }
   }
 </style>
-<!-- Firebase SDKs -->
+<!-- Firebase scripts -->
 <script src="https://www.gstatic.com/firebasejs/9.18.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.18.0/firebase-database-compat.js"></script>
 </head>
 <body>
-  <button id="back-btn" aria-label="Back to Game Hub">Back</button>
-  <div id="app" role="main" aria-live="polite" aria-atomic="true">
-    <div id="game-container" aria-label="Puzzle Quest game">
-      <div id="player-name" aria-live="polite" aria-atomic="true"></div>
-      <header>
-        <h1>Puzzle Quest</h1>
-        <p>Match 3 or more tiles by swapping adjacent ones!</p>
-      </header>
-      <div id="score-board">Score: 0</div>
-      <div id="board" aria-label="Game board, 6 by 6 grid" tabindex="0"></div>
-      <div id="controls">
-        <button id="reset-btn" aria-label="Reset game">Reset Game</button>
-        <button id="leaderboard-btn" aria-label="Show Leaderboard">Leaderboard</button>
-      </div>
-      <div id="instructions">
-        Tap or click a tile to select it, then tap an adjacent tile to swap.<br/>
-        Match 3 or more tiles of the same fruit horizontally or vertically to score points.
-      </div>
-    </div>
+<div id="game-container" aria-label="Puzzle Quest game">
+  <div id="player-name" aria-live="polite" aria-atomic="true"></div>
+  <header>
+    <h1>Puzzle Quest</h1>
+    <p>Match 3 or more tiles by swapping adjacent ones!</p>
+  </header>
+  <div id="score-board">Score: 0</div>
+  <div id="board" aria-label="Game board, 6 by 6 grid" tabindex="0"></div>
+  <div id="controls">
+    <button id="reset-btn" aria-label="Reset game">Reset Game</button>
+    <button id="leaderboard-btn" aria-label="Show Leaderboard">Leaderboard</button>
   </div>
+  <div id="instructions">
+    Tap or click a tile to select it, then tap an adjacent tile to swap.<br />
+    Match 3 or more tiles of the same fruit horizontally or vertically to score points.
+  </div>
+</div>
 
-  <!-- Leaderboard Modal -->
-  <div id="leaderboard-modal" role="dialog" aria-modal="true" aria-labelledby="leaderboard-header" tabindex="-1" aria-hidden="true">
-    <div id="leaderboard-header">Leaderboard</div>
-    <div id="leaderboard-list" tabindex="0">
-      <ul id="leaderboard-scores"></ul>
-    </div>
-    <div id="leaderboard-footer">
-      <button id="clear-leaderboard">Clear</button>
-      <button id="close-leaderboard">Close</button>
-    </div>
+<!-- Leaderboard Modal -->
+<div id="leaderboard-modal" role="dialog" aria-modal="true" aria-labelledby="leaderboard-header" tabindex="-1" aria-hidden="true">
+  <div id="leaderboard-header">Leaderboard</div>
+  <div id="leaderboard-list" tabindex="0">
+    <ul id="leaderboard-scores"></ul>
   </div>
-
-  <!-- Login Modal -->
-  <div id="login-modal" role="dialog" aria-modal="true" aria-labelledby="login-header" tabindex="-1" aria-hidden="true" style="display:none;">
-    <h2 id="login-header">Enter Your Name</h2>
-    <input type="text" id="username-input" aria-label="Enter your player name" maxlength="15" placeholder="Your name" autocomplete="off" spellcheck="false" />
-    <button id="login-submit">Start Game</button>
+  <div id="leaderboard-footer">
+    <button id="close-leaderboard">Close</button>
   </div>
+</div>
 
 <script>
-(function() {
-  'use strict'; 
-
-  // Firebase configuration - You must replace these with your actual Firebase project config
+(() => {
+  // Replace with your Firebase config
   const firebaseConfig = {
   apiKey: "AIzaSyDexnxE8BAytVuwp8QlqTGdqp-T8TvT-JI",
   authDomain: "puzzlequestgame-2b885.firebaseapp.com",
@@ -393,343 +284,190 @@
   messagingSenderId: "853619803651",
   appId: "1:853619803651:web:1d5be33744a40562ad7036"
 };
-
-
-  // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
   const database = firebase.database();
 
-  const app = document.getElementById('app');
-  const gameContainer = document.getElementById('game-container');
-  const backBtn = document.getElementById('back-btn');
+  const playerName = localStorage.getItem('puzzleQuestPlayerName') || 'Player';
+  document.getElementById('player-name').textContent = `Player: ${playerName}`;
+
+  const ROWS = 6;
+  const COLS = 6;
+  const COLORS_COUNT = 6;
+  const fruitEmojis = ['🍎', '🍊', '🥭', '🍓', '🍌', '🍑'];
+
+  let grid = [];
+  let selectedTile = null;
+  let score = 0;
+
+  const scoreBoard = document.getElementById('score-board');
+  const board = document.getElementById('board');
   const resetBtn = document.getElementById('reset-btn');
   const leaderboardBtn = document.getElementById('leaderboard-btn');
   const leaderboardModal = document.getElementById('leaderboard-modal');
   const leaderboardScores = document.getElementById('leaderboard-scores');
   const closeLeaderboardBtn = document.getElementById('close-leaderboard');
-  const clearLeaderboardBtn = document.getElementById('clear-leaderboard');
-  const playerNameDisplay = document.getElementById('player-name');
-  const loginModal = document.getElementById('login-modal');
-  const usernameInput = document.getElementById('username-input');
-  const loginSubmitBtn = document.getElementById('login-submit');
 
-  const ROWS = 6;
-  const COLS = 6;
-  const COLORS_COUNT = 6;
-  const MAX_LEADERBOARD_ENTRIES = 10;
-
-  const board = document.getElementById('board');
-  const scoreBoard = document.getElementById('score-board');
-  const fruitEmojis = ['🍎', '🍊', '🥭', '🍓', '🍌', '🍑'];
-
-  let score = 0;
-  let grid = [];
-  let selectedTile = null;
-  let playerName = '';
-
-  // --- Login ---
-
-  function showLogin() {
-    loginModal.style.display = 'flex';
-    loginModal.setAttribute('aria-hidden', 'false');
-    usernameInput.focus();
-  }
-
-  function hideLogin() {
-    loginModal.style.display = 'none';
-    loginModal.setAttribute('aria-hidden', 'true');
-  }
-
-  function loadPlayerName() {
-    const savedName = localStorage.getItem('puzzleQuestPlayerName');
-    if (savedName && savedName.trim() !== '') {
-      playerName = savedName.trim();
-      playerNameDisplay.textContent = 'Player: ' + playerName;
-      hideLogin();
-      initBoard();
-      loadScore();
-    } else {
-      showLogin();
-    }
-  }
-
-  function setPlayerName(name) {
-    playerName = name.trim();
-    if(playerName === '') playerName = 'Player';
-    playerNameDisplay.textContent = 'Player: ' + playerName;
-    localStorage.setItem('puzzleQuestPlayerName', playerName);
-  }
-
-  loginSubmitBtn.addEventListener('click', () => {
-    const name = usernameInput.value;
-    if(name.trim() === '') {
-      alert('Please enter your name to continue.');
-      usernameInput.focus();
-      return;
-    }
-    setPlayerName(name);
-    hideLogin();
-    initBoard();
-    loadScore();
-  });
-
-  usernameInput.addEventListener('keydown', e => {
-    if(e.key === 'Enter') {
-      loginSubmitBtn.click();
-    }
-  });
-
-  // --- Score functions ---
-
-  function loadScore() {
-    const saved = localStorage.getItem('puzzleQuestScore_' + playerName);
-    if(saved !== null) {
-      score = parseInt(saved, 10);
-      if(isNaN(score) || score < 0) score = 0;
-    } else {
-      score = 0;
-    }
-    scoreBoard.textContent = 'Score: ' + score;
-  }
-
-  function saveScore() {
-    localStorage.setItem('puzzleQuestScore_' + playerName, score);
-  }
-
-  // --- Leaderboard functions using Firebase Realtime Database ---
-
-  function updateLeaderboardWithScore(name, score) {
-    if(score <= 0 || !name) return;
-    const scoresRef = database.ref('leaderboard');
-    const newItemRef = scoresRef.push();
-    newItemRef.set({
-      name: name,
-      score: score,
-      timestamp: Date.now()
-    });
-  }
-
-  function loadLeaderboard() {
-    const scoresRef = database.ref('leaderboard').orderByChild('score').limitToLast(MAX_LEADERBOARD_ENTRIES);
-    scoresRef.off(); // Remove previous listeners to avoid duplication
-    scoresRef.on('value', (snapshot) => {
-      const data = snapshot.val();
-      const scores = [];
-      for(const key in data) {
-        if(Object.hasOwnProperty.call(data, key)) {
-          scores.push(data[key]);
-        }
+  // Tile creation
+  function createTile(r, c, colorIdx) {
+    const div = document.createElement('div');
+    div.className = `tile color-${colorIdx}`;
+    div.dataset.row = r;
+    div.dataset.col = c;
+    div.dataset.color = colorIdx;
+    div.setAttribute('role', 'button');
+    div.setAttribute('tabindex', '0');
+    div.setAttribute('aria-label', `Fruit tile ${fruitEmojis[colorIdx]}`);
+    div.textContent = fruitEmojis[colorIdx];
+    div.addEventListener('click', onTileClick);
+    div.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        div.click();
       }
-      scores.sort((a,b) => b.score - a.score);
-      renderLeaderboard(scores);
     });
+    return div;
   }
 
-  function renderLeaderboard(list) {
-    leaderboardScores.innerHTML = '';
-    if(list.length === 0) {
-      const li = document.createElement('li');
-      li.textContent = 'No scores recorded yet.';
-      li.style.fontStyle = 'italic';
-      leaderboardScores.appendChild(li);
-      return;
-    }
-    list.forEach((entry, idx) => {
-      const li = document.createElement('li');
-      li.textContent = `${idx + 1}. ${entry.name}`;
-      const scoreSpan = document.createElement('span');
-      scoreSpan.textContent = entry.score.toString();
-      li.appendChild(scoreSpan);
-      leaderboardScores.appendChild(li);
-    });
-  }
-
-  function clearLeaderboard() {
-    if(confirm('Are you sure you want to clear the leaderboard? This will remove all scores.')) {
-      database.ref('leaderboard').remove();
-    }
-  }
-
-  function showLeaderboard() {
-    leaderboardModal.classList.add('show');
-    leaderboardModal.setAttribute('aria-hidden', 'false');
-    leaderboardModal.focus();
-    loadLeaderboard();
-  }
-  function hideLeaderboard() {
-    leaderboardModal.classList.remove('show');
-    leaderboardModal.setAttribute('aria-hidden', 'true');
-  }
-
-  // --- Game core code remains the same ---
-
-  function createTile(row, col, colorIndex) {
-    const tile = document.createElement('div');
-    tile.classList.add('tile', `color-${colorIndex}`);
-    tile.dataset.row = row;
-    tile.dataset.col = col;
-    tile.dataset.color = colorIndex;
-    tile.setAttribute('role', 'button');
-    tile.setAttribute('tabindex', '0');
-    tile.setAttribute('aria-label', `Fruit tile ${fruitEmojis[colorIndex]}`);
-    tile.textContent = fruitEmojis[colorIndex];
-    tile.addEventListener('click', onTileClick);
-    tile.addEventListener('keydown', onTileKeyDown);
-    return tile;
-  }
-
+  // Board initialization
   function initBoard() {
     grid = [];
-    for(let r=0; r<ROWS; r++){
-      let row = [];
-      for(let c=0; c<COLS; c++){
+    for (let r = 0; r < ROWS; r++) {
+      const row = [];
+      for (let c = 0; c < COLS; c++) {
         let color;
         do {
-          color = Math.floor(Math.random()*COLORS_COUNT);
+          color = Math.floor(Math.random() * COLORS_COUNT);
         } while (
-          (c >= 2 && color === row[c-1] && color === row[c-2]) ||
-          (r >= 2 && color === grid[r-1][c] && color === grid[r-2][c])
+          c >= 2 && color === row[c - 1] && color === row[c - 2] ||
+          r >= 2 && color === grid[r - 1][c] && color === grid[r - 2][c]
         );
         row.push(color);
       }
       grid.push(row);
     }
     renderBoard();
-    loadScore();
+    score = 0;
+    updateScore(0);
     selectedTile = null;
   }
 
   function renderBoard() {
     board.innerHTML = '';
-    for(let r=0; r<ROWS; r++){
-      for(let c=0; c<COLS; c++){
-        board.appendChild(createTile(r,c,grid[r][c]));
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        board.appendChild(createTile(r, c, grid[r][c]));
       }
     }
   }
 
+  // Score update and firebase update
   function updateScore(points) {
     score += points;
-    if(score < 0) score = 0;
-    scoreBoard.textContent = 'Score: ' + score;
-    saveScore();
+    if (score < 0) score = 0;
+    scoreBoard.textContent = `Score: ${score}`;
+    database.ref('scores/' + playerName).set({
+      score: score,
+      updatedAt: firebase.database.ServerValue.TIMESTAMP
+    });
   }
 
-  function isAdjacent(r1,c1,r2,c2) {
-    return (
-      (r1 === r2 && Math.abs(c1 - c2) === 1) ||
-      (c1 === c2 && Math.abs(r1 - r2) === 1)
-    );
+  // Helper functions
+  function isAdjacent(r1, c1, r2, c2) {
+    return (r1 === r2 && Math.abs(c1 - c2) === 1) || (c1 === c2 && Math.abs(r1 - r2) === 1);
   }
 
-  function swapTiles(r1,c1,r2,c2) {
+  function swapTiles(r1, c1, r2, c2) {
     const temp = grid[r1][c1];
     grid[r1][c1] = grid[r2][c2];
     grid[r2][c2] = temp;
 
-    const tile1 = board.querySelector(`.tile[data-row="${r1}"][data-col="${c1}"]`);
-    const tile2 = board.querySelector(`.tile[data-row="${r2}"][data-col="${c2}"]`);
+    const t1 = board.querySelector(`.tile[data-row="${r1}"][data-col="${c1}"]`);
+    const t2 = board.querySelector(`.tile[data-row="${r2}"][data-col="${c2}"]`);
 
-    tile1.dataset.color = grid[r1][c1];
-    tile2.dataset.color = grid[r2][c2];
+    t1.dataset.color = grid[r1][c1];
+    t2.dataset.color = grid[r2][c2];
 
-    tile1.textContent = fruitEmojis[grid[r1][c1]];
-    tile2.textContent = fruitEmojis[grid[r2][c2]];
+    t1.textContent = fruitEmojis[grid[r1][c1]];
+    t2.textContent = fruitEmojis[grid[r2][c2]];
   }
 
+  // Match finding
   function findMatches() {
-    let matches = [];
-    for(let r=0; r<ROWS; r++) {
+    const matches = [];
+    // horizontal matches
+    for (let r = 0; r < ROWS; r++) {
       let count = 1;
-      for(let c=1; c<COLS; c++) {
-        if(grid[r][c] === grid[r][c-1]) {
-          count++;
-        } else {
-          if(count >=3) {
-            for(let k=0; k<count; k++) {
-              matches.push({r: r, c: c-1-k});
-            }
+      for (let c = 1; c < COLS; c++) {
+        if (grid[r][c] === grid[r][c - 1]) count++;
+        else {
+          if (count >= 3) {
+            for (let k = 0; k < count; k++) matches.push({ r: r, c: c - 1 - k });
           }
-          count =1;
+          count = 1;
         }
       }
-      if(count >= 3) {
-        for(let k=0; k<count; k++) {
-          matches.push({r: r, c: COLS-1-k});
-        }
+      if (count >= 3) {
+        for (let k = 0; k < count; k++) matches.push({ r: r, c: COLS - 1 - k });
       }
     }
-    for(let c=0; c<COLS; c++) {
+    // vertical matches
+    for (let c = 0; c < COLS; c++) {
       let count = 1;
-      for(let r=1; r<ROWS; r++) {
-        if(grid[r][c] === grid[r-1][c]) {
-          count++;
-        } else {
-          if(count >=3) {
-            for(let k=0; k<count; k++) {
-              matches.push({r: r-1-k, c: c});
-            }
+      for (let r = 1; r < ROWS; r++) {
+        if (grid[r][c] === grid[r - 1][c]) count++;
+        else {
+          if (count >= 3) {
+            for (let k = 0; k < count; k++) matches.push({ r: r - 1 - k, c: c });
           }
-          count =1;
+          count = 1;
         }
       }
-      if(count >= 3) {
-        for(let k=0; k<count; k++) {
-          matches.push({r: ROWS-1-k, c: c});
-        }
+      if (count >= 3) {
+        for (let k = 0; k < count; k++) matches.push({ r: ROWS - 1 - k, c: c });
       }
     }
-    const uniqueMatches = [];
+    // Remove duplicates
+    const unique = [];
     const seen = new Set();
-    matches.forEach(({r,c}) => {
+    matches.forEach(({ r, c }) => {
       const key = r + ',' + c;
-      if(!seen.has(key)) {
+      if (!seen.has(key)) {
         seen.add(key);
-        uniqueMatches.push({r,c});
+        unique.push({ r, c });
       }
     });
-    return uniqueMatches;
+    return unique;
   }
 
+  // Remove matches and collapse
   function removeMatchesAndCollapse(matches) {
-    if(matches.length === 0) return false;
-    matches.forEach(({r,c}) => {
-      grid[r][c] = null;
-    });
+    if (matches.length === 0) return false;
+    matches.forEach(({ r, c }) => (grid[r][c] = null));
     updateScore(matches.length * 10);
-    for(let c=0; c<COLS; c++) {
+
+    for (let c = 0; c < COLS; c++) {
       let newCol = [];
-      for(let r=ROWS-1; r>=0; r--) {
-        if(grid[r][c] !== null) {
-          newCol.push(grid[r][c]);
-        }
-      }
-      while(newCol.length < ROWS) {
-        newCol.push(Math.floor(Math.random() * COLORS_COUNT));
-      }
-      for(let r=ROWS-1,i=0; r>=0; r--,i++) {
-        grid[r][c] = newCol[i];
-      }
+      for (let r = ROWS - 1; r >= 0; r--) if (grid[r][c] !== null) newCol.push(grid[r][c]);
+      while (newCol.length < ROWS) newCol.push(Math.floor(Math.random() * COLORS_COUNT));
+      for (let r = ROWS - 1, i = 0; r >= 0; r--, i++) grid[r][c] = newCol[i];
     }
     renderBoard();
     return true;
   }
 
-  function onTileClick(event) {
-    const tile = event.currentTarget;
+  // Tile click handler
+  function onTileClick(e) {
+    const tile = e.currentTarget;
     const r = parseInt(tile.dataset.row);
     const c = parseInt(tile.dataset.col);
-    if(selectedTile === null) {
-      selectTile(r,c,tile);
-    } else {
-      if(r === selectedTile.r && c === selectedTile.c) {
-        deselectTile();
-      } else if(isAdjacent(r,c,selectedTile.r,selectedTile.c)) {
-        swapTiles(r,c,selectedTile.r,selectedTile.c);
-        const matches = findMatches();
-        if(matches.length === 0) {
+    if (selectedTile === null) selectTile(r, c, tile);
+    else {
+      if (r === selectedTile.r && c === selectedTile.c) deselectTile();
+      else if (isAdjacent(r, c, selectedTile.r, selectedTile.c)) {
+        swapTiles(r, c, selectedTile.r, selectedTile.c);
+        if (findMatches().length === 0) {
           setTimeout(() => {
-            swapTiles(r,c,selectedTile.r,selectedTile.c);
+            swapTiles(r, c, selectedTile.r, selectedTile.c);
             deselectTile();
           }, 300);
         } else {
@@ -738,28 +476,18 @@
         }
       } else {
         deselectTile();
-        selectTile(r,c,tile);
+        selectTile(r, c, tile);
       }
     }
   }
 
-  function onTileKeyDown(event) {
-    const tile = event.currentTarget;
-    const r = parseInt(tile.dataset.row);
-    const c = parseInt(tile.dataset.col);
-    if(event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      tile.click();
-    }
-  }
-
-  function selectTile(r,c,tileElement) {
-    selectedTile = {r,c,element: tileElement};
-    tileElement.classList.add('selected');
+  function selectTile(r, c, tile) {
+    selectedTile = { r, c, element: tile };
+    tile.classList.add('selected');
   }
 
   function deselectTile() {
-    if(selectedTile) {
+    if (selectedTile) {
       selectedTile.element.classList.remove('selected');
       selectedTile = null;
     }
@@ -767,45 +495,67 @@
 
   function chainRemove() {
     const matches = findMatches();
-    if(matches.length === 0) return;
+    if (matches.length === 0) return;
     removeMatchesAndCollapse(matches);
     setTimeout(chainRemove, 350);
   }
 
-  resetBtn.addEventListener('click', () => {
+  resetBtn.onclick = () => {
     deselectTile();
-    // Save current score with playerName if valid
-    updateLeaderboardWithScore(playerName, score);
-    score = 0;
-    saveScore();
+    updateScore(-score); // reset score to 0
     initBoard();
-  });
+  };
 
-  leaderboardBtn.addEventListener('click', () => {
-    updateLeaderboardWithScore(playerName, score);
-    showLeaderboard();
-  });
+  leaderboardBtn.onclick = () => {
+    // Load all scores and show leaderboard modal
+    database.ref('scores').orderByChild('score').limitToLast(10).once('value', snapshot => {
+      const data = snapshot.val() || {};
+      const scores = Object.entries(data)
+        .map(([key, val]) => ({ name: key, score: val.score || 0 }))
+        .sort((a, b) => b.score - a.score);
+      renderLeaderboard(scores);
+      leaderboardModal.classList.add('show');
+      leaderboardModal.setAttribute('aria-hidden', 'false');
+      leaderboardModal.focus();
+    });
+  };
 
-  closeLeaderboardBtn.addEventListener('click', () => {
-    hideLeaderboard();
-  });
+  closeLeaderboardBtn.onclick = () => {
+    leaderboardModal.classList.remove('show');
+    leaderboardModal.setAttribute('aria-hidden', 'true');
+  };
 
-  clearLeaderboardBtn.addEventListener('click', () => {
-    if(confirm('Are you sure you want to clear the leaderboard?')) {
-      clearLeaderboard();
-      renderLeaderboard([]);
+  // Save current score on every update
+  // We'll override updateScore to also sync Firebase
+  const originalUpdateScore = updateScore;
+  updateScore = function(points){
+    originalUpdateScore(points);
+    database.ref('scores/' + playerName).set({
+      score: score,
+      updatedAt: firebase.database.ServerValue.TIMESTAMP
+    });
+  };
+
+  function renderLeaderboard(scores) {
+    leaderboardScores.innerHTML = '';
+    if (scores.length === 0) {
+      const li = document.createElement('li');
+      li.textContent = 'No scores recorded yet.';
+      li.style.fontStyle = 'italic';
+      leaderboardScores.appendChild(li);
+      return;
     }
-  });
-
-  backBtn.addEventListener('click', () => {
-    window.location.href = 'hub_game.html';
-  });
-
-  // Initialize on page load
-  function startGame() {
-    loadPlayerName();
+    scores.forEach(({name, score}, index) => {
+      const li = document.createElement('li');
+      li.textContent = `${index + 1}. ${name}`;
+      const span = document.createElement('span');
+      span.textContent = score;
+      li.appendChild(span);
+      leaderboardScores.appendChild(li);
+    });
   }
-  startGame();
+
+  initBoard();
 
 })();
 </script>
