@@ -61,10 +61,6 @@
     user-select: none;
     line-height: 1.4;
   }
-  #score-board span {
-    font-size: 0.9rem;
-    color: #bb86fc;
-  }
   #board {
     flex-grow: 1;
     display: grid;
@@ -319,7 +315,7 @@
     <h1>Puzzle Quest</h1>
     <p>Match 3 or more tiles by swapping adjacent ones!</p>
   </header>
-  <div id="score-board">Score: 0<br><span>High Score: 0</span></div>
+  <div id="score-board">Score: 0</div>
   <div id="board" aria-label="Game board, 6 by 6 grid" tabindex="0"></div>
   <div id="controls">
     <button id="reset-btn" aria-label="Reset game">Reset Game</button>
@@ -341,6 +337,12 @@
     <button id="close-leaderboard">Close</button>
   </div>
 </div>
+
+<!-- Audio elements for sound effects -->
+<audio id="swap-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3" preload="auto"></audio>
+<audio id="match-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-unlock-game-notification-253.mp3" preload="auto"></audio>
+<audio id="select-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-quick-jump-arcade-game-239.mp3" preload="auto"></audio>
+<audio id="button-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-mechanical-bling-210.mp3" preload="auto"></audio>
 
 <script>
 (() => {
@@ -367,7 +369,6 @@
   let grid = [];
   let selectedTile = null;
   let score = 0;
-  let highScore = 0;
   let playerName = 'Player';
 
   // DOM elements
@@ -383,6 +384,12 @@
   const leaderboardModal = document.getElementById('leaderboard-modal');
   const leaderboardScores = document.getElementById('leaderboard-scores');
   const closeLeaderboardBtn = document.getElementById('close-leaderboard');
+
+  // Sound effects
+  const swapSound = document.getElementById('swap-sound');
+  const matchSound = document.getElementById('match-sound');
+  const selectSound = document.getElementById('select-sound');
+  const buttonSound = document.getElementById('button-sound');
 
   // Initialize game when page loads
   window.addEventListener('DOMContentLoaded', () => {
@@ -402,9 +409,17 @@
   });
 
   // Name entry handling
-  nameSubmit.addEventListener('click', startGame);
+  nameSubmit.addEventListener('click', () => {
+    buttonSound.currentTime = 0;
+    buttonSound.play();
+    startGame();
+  });
   nameInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') startGame();
+    if (e.key === 'Enter') {
+      buttonSound.currentTime = 0;
+      buttonSound.play();
+      startGame();
+    }
   });
 
   function startGame() {
@@ -423,40 +438,14 @@
     initGame();
   }
 
-  // Score storage functions
-  function getStoredHighScore() {
-    return parseInt(localStorage.getItem('puzzleQuestHighScore')) || 0;
-  }
-
-  function updateStoredHighScore(newScore) {
-    localStorage.setItem('puzzleQuestHighScore', newScore.toString());
-  }
-
-  function getLocalScores() {
-    const saved = localStorage.getItem('puzzleQuestLocalScores');
-    return saved ? JSON.parse(saved) : [];
-  }
-
-  function updateLocalScores(newScore) {
-    const scores = getLocalScores();
-    scores.unshift({
-      score: newScore,
-      date: new Date().toISOString()
-    });
-    // Keep only last 10 scores
-    const updatedScores = scores.slice(0, 10);
-    localStorage.setItem('puzzleQuestLocalScores', JSON.stringify(updatedScores));
-    return updatedScores;
-  }
-
   function initGame() {
-    highScore = getStoredHighScore();
+    score = 0;
     updateScoreDisplay();
     initBoard();
   }
 
   function updateScoreDisplay() {
-    scoreBoard.innerHTML = `Score: ${score}<br><span>High Score: ${highScore}</span>`;
+    scoreBoard.textContent = `Score: ${score}`;
   }
 
   // Tile creation
@@ -498,8 +487,6 @@
       grid.push(row);
     }
     renderBoard();
-    score = 0;
-    updateScoreDisplay();
     selectedTile = null;
   }
 
@@ -517,24 +504,13 @@
     score += points;
     if (score < 0) score = 0;
     
-    const beatHighScore = score > highScore;
-    if (beatHighScore) {
-      highScore = score;
-      updateStoredHighScore(highScore);
-      scoreBoard.classList.add('celebrate');
-      setTimeout(() => scoreBoard.classList.remove('celebrate'), 1500);
-    }
-    
     updateScoreDisplay();
     
-    // Update Firebase
+    // Update Firebase with current score
     database.ref('scores/' + playerName).set({
       score: score,
       updatedAt: firebase.database.ServerValue.TIMESTAMP
     });
-    
-    // Update local scores
-    updateLocalScores(score);
   }
 
   // Helper functions
@@ -543,6 +519,9 @@
   }
 
   function swapTiles(r1, c1, r2, c2) {
+    swapSound.currentTime = 0;
+    swapSound.play();
+    
     const temp = grid[r1][c1];
     grid[r1][c1] = grid[r2][c2];
     grid[r2][c2] = temp;
@@ -608,6 +587,10 @@
   // Remove matches and collapse
   function removeMatchesAndCollapse(matches) {
     if (matches.length === 0) return false;
+    
+    matchSound.currentTime = 0;
+    matchSound.play();
+    
     matches.forEach(({ r, c }) => (grid[r][c] = null));
     updateScore(matches.length * 10);
 
@@ -626,10 +609,15 @@
     const tile = e.currentTarget;
     const r = parseInt(tile.dataset.row);
     const c = parseInt(tile.dataset.col);
-    if (selectedTile === null) selectTile(r, c, tile);
-    else {
-      if (r === selectedTile.r && c === selectedTile.c) deselectTile();
-      else if (isAdjacent(r, c, selectedTile.r, selectedTile.c)) {
+    
+    if (selectedTile === null) {
+      selectSound.currentTime = 0;
+      selectSound.play();
+      selectTile(r, c, tile);
+    } else {
+      if (r === selectedTile.r && c === selectedTile.c) {
+        deselectTile();
+      } else if (isAdjacent(r, c, selectedTile.r, selectedTile.c)) {
         swapTiles(r, c, selectedTile.r, selectedTile.c);
         if (findMatches().length === 0) {
           setTimeout(() => {
@@ -642,6 +630,8 @@
         }
       } else {
         deselectTile();
+        selectSound.currentTime = 0;
+        selectSound.play();
         selectTile(r, c, tile);
       }
     }
@@ -668,6 +658,8 @@
 
   // Event listeners
   resetBtn.onclick = () => {
+    buttonSound.currentTime = 0;
+    buttonSound.play();
     deselectTile();
     score = 0;
     updateScoreDisplay();
@@ -675,20 +667,14 @@
   };
 
   leaderboardBtn.onclick = () => {
-    // Show both global and local scores
+    buttonSound.currentTime = 0;
+    buttonSound.play();
     database.ref('scores').orderByChild('score').limitToLast(10).once('value', snapshot => {
-      const globalData = snapshot.val() || {};
-      const globalScores = Object.entries(globalData)
+      const data = snapshot.val() || {};
+      const scores = Object.entries(data)
         .map(([key, val]) => ({ name: key, score: val.score || 0 }))
         .sort((a, b) => b.score - a.score);
-      
-      const localScores = getLocalScores().map(entry => ({
-        name: playerName,
-        score: entry.score,
-        date: new Date(entry.date).toLocaleDateString()
-      }));
-      
-      renderLeaderboard(globalScores, localScores);
+      renderLeaderboard(scores);
       leaderboardModal.classList.add('show');
       leaderboardModal.setAttribute('aria-hidden', 'false');
       leaderboardModal.focus();
@@ -696,63 +682,29 @@
   };
 
   closeLeaderboardBtn.onclick = () => {
+    buttonSound.currentTime = 0;
+    buttonSound.play();
     leaderboardModal.classList.remove('show');
     leaderboardModal.setAttribute('aria-hidden', 'true');
   };
 
-  function renderLeaderboard(globalScores, localScores) {
+  function renderLeaderboard(scores) {
     leaderboardScores.innerHTML = '';
-    
-    // Add global leaderboard section
-    const globalHeader = document.createElement('li');
-    globalHeader.innerHTML = '<strong style="width:100%; text-align:center; display:block; margin: 8px 0;">Global Leaderboard</strong>';
-    leaderboardScores.appendChild(globalHeader);
-    
-    if (globalScores.length === 0) {
+    if (scores.length === 0) {
       const li = document.createElement('li');
-      li.textContent = 'No global scores yet';
+      li.textContent = 'No scores recorded yet.';
       li.style.fontStyle = 'italic';
-      li.style.textAlign = 'center';
       leaderboardScores.appendChild(li);
-    } else {
-      globalScores.forEach(({name, score}, index) => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <div>${index + 1}. ${name}</div>
-          <div>${score}</div>
-        `;
-        leaderboardScores.appendChild(li);
-      });
+      return;
     }
-    
-    // Add separator
-    const separator = document.createElement('li');
-    separator.style.height = '1px';
-    separator.style.backgroundColor = '#555577';
-    separator.style.margin = '8px 0';
-    leaderboardScores.appendChild(separator);
-    
-    // Add personal scores section
-    const personalHeader = document.createElement('li');
-    personalHeader.innerHTML = '<strong style="width:100%; text-align:center; display:block; margin: 8px 0;">Your Recent Scores</strong>';
-    leaderboardScores.appendChild(personalHeader);
-    
-    if (localScores.length === 0) {
+    scores.forEach(({name, score}, index) => {
       const li = document.createElement('li');
-      li.textContent = 'No personal scores yet';
-      li.style.fontStyle = 'italic';
-      li.style.textAlign = 'center';
+      li.textContent = `${index + 1}. ${name}`;
+      const span = document.createElement('span');
+      span.textContent = score;
+      li.appendChild(span);
       leaderboardScores.appendChild(li);
-    } else {
-      localScores.forEach(({name, score, date}, index) => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <div>${index + 1}. ${score}</div>
-          <small style="font-size: 0.7rem; opacity: 0.7;">${date}</small>
-        `;
-        leaderboardScores.appendChild(li);
-      });
-    }
+    });
   }
 })();
 </script>
