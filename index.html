@@ -5,30 +5,127 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>Puzzle Quest</title>
 <style>
-  * { box-sizing: border-box; }
+  * { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+  }
+  
   html, body {
-    margin: 0; padding: 0; height: 100%; overflow: hidden;
+    height: 100%; 
+    overflow: hidden;
     background: #121217;
     color: #eee;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    touch-action: manipulation;
   }
+  
   body {
-    display: flex; align-items: center; justify-content: center;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
     -webkit-tap-highlight-color: transparent;
   }
+  
   #game-container {
     background: #1e1e2f;
     border-radius: 16px;
     box-shadow: 0 0 15px 2px #440099aa, 0 10px 25px rgba(0,0,0,0.9);
-    width: 340px;
-    height: 600px;
+    width: 100%;
+    max-width: 340px;
+    height: 100%;
+    max-height: 600px;
     display: flex;
     flex-direction: column;
     padding: 16px;
     box-sizing: border-box;
     position: relative;
+    transition: all 0.3s ease;
   }
-  header { text-align: center; margin-bottom: 8px; user-select: none; }
+  
+  body.fullscreen #game-container {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 0;
+  }
+  
+  #player-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  #player-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  #player-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #bb86fc;
+    cursor: pointer;
+  }
+  
+  #player-name {
+    font-weight: 700;
+    color: #bb86fccc;
+    font-size: 0.9rem;
+    user-select: none;
+    cursor: pointer;
+  }
+  
+  #player-menu {
+    position: absolute;
+    top: 60px;
+    left: 10px;
+    background: #2a2a44;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    z-index: 1000;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    width: 180px;
+  }
+  
+  #player-menu button {
+    background: #3b3d5c;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: white;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  #player-menu button:hover {
+    background: #4b4d6c;
+  }
+  
+  #fullscreen-btn {
+    background: none;
+    border: none;
+    color: #bb86fc;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px;
+  }
+  
+  header { 
+    text-align: center; 
+    margin-bottom: 8px; 
+    user-select: none; 
+  }
+  
   header h1 {
     font-size: 1.8rem;
     letter-spacing: 2.5px;
@@ -36,20 +133,13 @@
     color: #bb86fc;
     text-shadow: 0 0 8px #bb86fc99;
   }
+  
   header p {
     margin: 0;
     font-size: 0.85rem;
     color: #aaaabbcc;
   }
-  #player-name {
-    position: absolute;
-    top: 14px;
-    left: 14px;
-    font-weight: 700;
-    color: #bb86fccc;
-    font-size: 0.9rem;
-    user-select: none;
-  }
+  
   #score-board {
     margin: 4px 0 8px;
     font-weight: 700;
@@ -60,6 +150,7 @@
     user-select: none;
     line-height: 1.4;
   }
+  
   #board {
     flex-grow: 1;
     display: grid;
@@ -70,12 +161,14 @@
     padding: 6px;
     box-shadow: inset 0 0 12px #111133cc;
     user-select: none;
+    position: relative;
   }
+  
   .tile {
     background: #3b3d5c;
     border-radius: 10px;
-    width: 44px;
-    height: 44px;
+    width: 100%;
+    aspect-ratio: 1/1;
     cursor: pointer;
     display: flex;
     justify-content: center;
@@ -85,24 +178,55 @@
     border: 3px solid transparent;
     transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.3s ease;
     box-shadow: inset 0 1px 3px #666777aa;
+    position: relative;
+    overflow: hidden;
   }
+  
   .tile.selected {
     outline: 3px solid #fff;
     box-shadow: 0 0 16px 4px #ffffffcc;
     transform: scale(1.1);
     z-index: 10;
   }
-  .tile.color-0 { border-color: #ff4c4c;}
-  .tile.color-1 { border-color: #f7a932;}
-  .tile.color-2 { border-color: #3bb3ff;}
-  .tile.color-3 { border-color: #40da47;}
-  .tile.color-4 { border-color: #ffd947;}
-  .tile.color-5 { border-color: #ac41ff;}
+  
+  .tile.color-0 { border-color: #ff4c4c; }
+  .tile.color-1 { border-color: #f7a932; }
+  .tile.color-2 { border-color: #3bb3ff; }
+  .tile.color-3 { border-color: #40da47; }
+  .tile.color-4 { border-color: #ffd947; }
+  .tile.color-5 { border-color: #ac41ff; }
+  
+  .tile.matched {
+    animation: matchAnimation 0.5s ease-out forwards;
+  }
+  
+  @keyframes matchAnimation {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.7; }
+    100% { transform: scale(0); opacity: 0; }
+  }
+  
+  .explosion {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
+    opacity: 0;
+    animation: explode 0.5s ease-out forwards;
+  }
+  
+  @keyframes explode {
+    0% { transform: scale(0); opacity: 0.8; }
+    100% { transform: scale(3); opacity: 0; }
+  }
+  
   #controls {
     margin-top: 8px;
     display: flex;
     justify-content: space-between;
   }
+  
   button {
     background: #bb86fc;
     color: #121217;
@@ -116,12 +240,14 @@
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
     user-select: none;
   }
+  
   button:hover,
   button:focus {
     background: #9a6fff;
     box-shadow: 0 8px 18px #9a6fffcc;
     outline: none;
   }
+  
   #instructions {
     font-size: 0.75rem;
     color: #999aadcc;
@@ -130,6 +256,7 @@
     user-select: none;
     line-height: 1.3;
   }
+  
   #leaderboard-modal {
     position: fixed;
     top: 50%;
@@ -208,15 +335,8 @@
     box-shadow: 0 6px 14px #9a6fffcc;
     outline: none;
   }
-  .celebrate {
-    animation: pulse 0.5s ease 3;
-  }
-  @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
-  }
-  #name-modal {
+  
+  #rename-modal, #avatar-modal {
     position: fixed;
     top: 0;
     left: 0;
@@ -227,19 +347,23 @@
     justify-content: center;
     align-items: center;
     z-index: 3000;
+    display: none;
   }
-  #name-form {
+  
+  .modal-content {
     background: #1e1e2f;
     padding: 24px;
     border-radius: 16px;
     width: 300px;
     text-align: center;
   }
-  #name-form h2 {
+  
+  .modal-content h2 {
     margin-top: 0;
     color: #bb86fc;
   }
-  #name-input {
+  
+  .modal-content input {
     width: 100%;
     padding: 12px;
     margin: 16px 0;
@@ -249,48 +373,68 @@
     color: white;
     font-size: 1rem;
   }
-  #name-submit {
-    background: #bb86fc;
-    color: #121217;
-    border: none;
+  
+  .modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  
+  .modal-buttons button {
+    flex: 1;
+  }
+  
+  #avatar-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+  }
+  
+  #camera-preview {
+    width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    background: #2a2a44;
     border-radius: 8px;
-    padding: 10px 20px;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+    display: none;
   }
-  #name-submit:hover {
-    background: #9a6fff;
+  
+  #avatar-image-preview {
+    width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: 8px;
+    display: none;
   }
+  
   @media (max-width: 400px) {
     #game-container {
-      width: 320px;
-      height: 580px;
       padding: 12px;
     }
+    
     header h1 {
       font-size: 1.6rem;
     }
+    
     #score-board {
       font-size: 1rem;
     }
+    
     button {
       font-size: 0.9rem;
       padding: 8px 16px;
     }
+    
     #instructions {
       font-size: 0.7rem;
     }
-    .tile {
-      width: 40px;
-      height: 40px;
-      font-size: 1.5rem;
-    }
+    
     #leaderboard-modal {
       width: 90vw;
     }
-    #name-form {
+    
+    .modal-content {
       width: 90vw;
     }
   }
@@ -301,7 +445,7 @@
 </head>
 <body>
 <div id="name-modal">
-  <div id="name-form">
+  <div id="name-form" class="modal-content">
     <h2>Enter Your Name</h2>
     <input type="text" id="name-input" placeholder="Player name" maxlength="20" autofocus>
     <button id="name-submit">Start Game</button>
@@ -309,17 +453,32 @@
 </div>
 
 <div id="game-container" aria-label="Puzzle Quest game" style="display: none;">
-  <div id="player-name" aria-live="polite" aria-atomic="true"></div>
+  <div id="player-header">
+    <div id="player-info">
+      <img id="player-avatar" src="https://ui-avatars.com/api/?name=Player&background=bb86fc&color=121217">
+      <div id="player-name">Player</div>
+      <div id="player-menu">
+        <button id="rename-btn"><span>✏️</span> Rename</button>
+        <button id="camera-btn"><span>📷</span> Take Photo</button>
+        <button id="gallery-btn"><span>🖼️</span> Choose from Gallery</button>
+      </div>
+    </div>
+    <button id="fullscreen-btn">⛶</button>
+  </div>
+  
   <header>
     <h1>Puzzle Quest</h1>
     <p>Match 3 or more tiles by swapping adjacent ones!</p>
   </header>
+  
   <div id="score-board">Score: 0</div>
   <div id="board" aria-label="Game board, 6 by 6 grid" tabindex="0"></div>
+  
   <div id="controls">
     <button id="reset-btn" aria-label="Reset game">Reset Game</button>
     <button id="leaderboard-btn" aria-label="Show Leaderboard">Leaderboard</button>
   </div>
+  
   <div id="instructions">
     Tap or click a tile to select it, then tap an adjacent tile to swap.<br />
     Match 3 or more tiles of the same fruit horizontally or vertically to score points.
@@ -337,11 +496,41 @@
   </div>
 </div>
 
+<!-- Rename Modal -->
+<div id="rename-modal">
+  <div class="modal-content">
+    <h2>Change Your Name</h2>
+    <input type="text" id="rename-input" placeholder="New name" maxlength="20" autofocus>
+    <div class="modal-buttons">
+      <button id="rename-cancel">Cancel</button>
+      <button id="rename-confirm">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Avatar Modal -->
+<div id="avatar-modal">
+  <div class="modal-content">
+    <h2 id="avatar-modal-title">Take Photo</h2>
+    <video id="camera-preview" autoplay playsinline></video>
+    <img id="avatar-image-preview" alt="Image preview">
+    <div id="avatar-options">
+      <button id="capture-btn">Capture</button>
+      <button id="upload-btn">Upload</button>
+      <button id="avatar-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden file input -->
+<input type="file" id="file-input" accept="image/*" style="display: none;">
+
 <!-- Audio elements for sound effects -->
 <audio id="swap-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3" preload="auto"></audio>
 <audio id="match-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-unlock-game-notification-253.mp3" preload="auto"></audio>
 <audio id="select-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-quick-jump-arcade-game-239.mp3" preload="auto"></audio>
 <audio id="button-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-mechanical-bling-210.mp3" preload="auto"></audio>
+<audio id="explosion-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3" preload="auto"></audio>
 
 <script>
 (() => {
@@ -370,6 +559,7 @@
   let score = 0;
   let playerName = 'Player';
   let lastGameState = null;
+  let stream = null;
 
   // DOM elements
   const nameModal = document.getElementById('name-modal');
@@ -377,6 +567,9 @@
   const nameSubmit = document.getElementById('name-submit');
   const gameContainer = document.getElementById('game-container');
   const playerNameDisplay = document.getElementById('player-name');
+  const playerAvatar = document.getElementById('player-avatar');
+  const playerMenu = document.getElementById('player-menu');
+  const fullscreenBtn = document.getElementById('fullscreen-btn');
   const scoreBoard = document.getElementById('score-board');
   const board = document.getElementById('board');
   const resetBtn = document.getElementById('reset-btn');
@@ -384,21 +577,42 @@
   const leaderboardModal = document.getElementById('leaderboard-modal');
   const leaderboardScores = document.getElementById('leaderboard-scores');
   const closeLeaderboardBtn = document.getElementById('close-leaderboard');
+  const renameModal = document.getElementById('rename-modal');
+  const renameInput = document.getElementById('rename-input');
+  const renameCancel = document.getElementById('rename-cancel');
+  const renameConfirm = document.getElementById('rename-confirm');
+  const avatarModal = document.getElementById('avatar-modal');
+  const cameraPreview = document.getElementById('camera-preview');
+  const avatarImagePreview = document.getElementById('avatar-image-preview');
+  const captureBtn = document.getElementById('capture-btn');
+  const uploadBtn = document.getElementById('upload-btn');
+  const avatarCancel = document.getElementById('avatar-cancel');
+  const cameraBtn = document.getElementById('camera-btn');
+  const galleryBtn = document.getElementById('gallery-btn');
+  const renameBtn = document.getElementById('rename-btn');
+  const fileInput = document.getElementById('file-input');
+  const avatarModalTitle = document.getElementById('avatar-modal-title');
 
   // Sound effects
   const swapSound = document.getElementById('swap-sound');
   const matchSound = document.getElementById('match-sound');
   const selectSound = document.getElementById('select-sound');
   const buttonSound = document.getElementById('button-sound');
+  const explosionSound = document.getElementById('explosion-sound');
 
   // Initialize game when page loads
   window.addEventListener('DOMContentLoaded', () => {
     const savedName = localStorage.getItem('puzzleQuestPlayerName');
     const savedGame = localStorage.getItem('puzzleQuestLastGame');
+    const savedAvatar = localStorage.getItem('puzzleQuestPlayerAvatar');
     
     if (savedName) {
       playerName = savedName;
-      playerNameDisplay.textContent = `Player: ${playerName}`;
+      playerNameDisplay.textContent = playerName;
+      
+      if (savedAvatar) {
+        playerAvatar.src = savedAvatar;
+      }
       
       if (savedGame) {
         try {
@@ -406,18 +620,10 @@
           score = lastGameState.score;
           updateScoreDisplay();
           
-          // Ask if player wants to continue
-          if (confirm(`Welcome back ${playerName}! You had a score of ${score}. Continue where you left off?`)) {
-            nameModal.style.display = 'none';
-            gameContainer.style.display = 'flex';
-            initBoardFromSave(lastGameState.grid);
-          } else {
-            // Start new game
-            localStorage.removeItem('puzzleQuestLastGame');
-            nameModal.style.display = 'none';
-            gameContainer.style.display = 'flex';
-            initGame();
-          }
+          // Automatically continue last game
+          nameModal.style.display = 'none';
+          gameContainer.style.display = 'flex';
+          initBoardFromSave(lastGameState.grid);
         } catch (e) {
           console.error("Error loading saved game:", e);
           localStorage.removeItem('puzzleQuestLastGame');
@@ -438,6 +644,185 @@
     }
   });
 
+  // Fullscreen toggle
+  fullscreenBtn.addEventListener('click', toggleFullscreen);
+  
+  function toggleFullscreen() {
+    buttonSound.currentTime = 0;
+    buttonSound.play();
+    
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+      fullscreenBtn.textContent = '⛶';
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+        fullscreenBtn.textContent = '⛶';
+      }
+    }
+  }
+  
+  document.addEventListener('fullscreenchange', () => {
+    if (document.fullscreenElement) {
+      document.body.classList.add('fullscreen');
+      fullscreenBtn.textContent = '🗗';
+    } else {
+      document.body.classList.remove('fullscreen');
+      fullscreenBtn.textContent = '⛶';
+    }
+  });
+
+  // Player menu toggle
+  playerNameDisplay.addEventListener('click', togglePlayerMenu);
+  playerAvatar.addEventListener('click', togglePlayerMenu);
+  
+  function togglePlayerMenu() {
+    buttonSound.currentTime = 0;
+    buttonSound.play();
+    playerMenu.style.display = playerMenu.style.display === 'flex' ? 'none' : 'flex';
+  }
+  
+  // Close menu when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!playerMenu.contains(e.target) && e.target !== playerNameDisplay && e.target !== playerAvatar) {
+      playerMenu.style.display = 'none';
+    }
+  });
+
+  // Rename functionality
+  renameBtn.addEventListener('click', () => {
+    buttonSound.currentTime = 0;
+    buttonSound.play();
+    playerMenu.style.display = 'none';
+    renameInput.value = playerName;
+    renameModal.style.display = 'flex';
+    renameInput.focus();
+  });
+  
+  renameCancel.addEventListener('click', () => {
+    buttonSound.currentTime = 0;
+    buttonSound.play();
+    renameModal.style.display = 'none';
+  });
+  
+  renameConfirm.addEventListener('click', () => {
+    buttonSound.currentTime = 0;
+    buttonSound.play();
+    const newName = renameInput.value.trim() || 'Player';
+    if (newName.length > 20) {
+      playerName = newName.substring(0, 20);
+    } else {
+      playerName = newName;
+    }
+    playerNameDisplay.textContent = playerName;
+    localStorage.setItem('puzzleQuestPlayerName', playerName);
+    renameModal.style.display = 'none';
+    
+    // Update Firebase with new name
+    if (score > 0) {
+      database.ref('scores/' + playerName).set({
+        score: score,
+        updatedAt: firebase.database.ServerValue.TIMESTAMP
+      });
+    }
+  });
+
+  // Avatar functionality
+  cameraBtn.addEventListener('click', () => {
+    buttonSound.currentTime = 0;
+    buttonSound.play();
+    playerMenu.style.display = 'none';
+    avatarModalTitle.textContent = 'Take Photo';
+    avatarModal.style.display = 'flex';
+    startCamera();
+  });
+  
+  galleryBtn.addEventListener('click', () => {
+    buttonSound.currentTime = 0;
+    buttonSound.play();
+    playerMenu.style.display = 'none';
+    fileInput.click();
+  });
+  
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        avatarImagePreview.src = event.target.result;
+        avatarImagePreview.style.display = 'block';
+        cameraPreview.style.display = 'none';
+        avatarModalTitle.textContent = 'Preview Image';
+        avatarModal.style.display = 'flex';
+        
+        // Show upload button
+        uploadBtn.style.display = 'block';
+        captureBtn.style.display = 'none';
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    }
+  });
+  
+  captureBtn.addEventListener('click', () => {
+    buttonSound.currentTime = 0;
+    buttonSound.play();
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = cameraPreview.videoWidth;
+    canvas.height = cameraPreview.videoHeight;
+    canvas.getContext('2d').drawImage(cameraPreview, 0, 0);
+    
+    const imageData = canvas.toDataURL('image/png');
+    playerAvatar.src = imageData;
+    localStorage.setItem('puzzleQuestPlayerAvatar', imageData);
+    
+    stopCamera();
+    avatarModal.style.display = 'none';
+  });
+  
+  uploadBtn.addEventListener('click', () => {
+    buttonSound.currentTime = 0;
+    buttonSound.play();
+    
+    playerAvatar.src = avatarImagePreview.src;
+    localStorage.setItem('puzzleQuestPlayerAvatar', avatarImagePreview.src);
+    avatarModal.style.display = 'none';
+  });
+  
+  avatarCancel.addEventListener('click', () => {
+    buttonSound.currentTime = 0;
+    buttonSound.play();
+    stopCamera();
+    avatarModal.style.display = 'none';
+  });
+  
+  function startCamera() {
+    cameraPreview.style.display = 'block';
+    avatarImagePreview.style.display = 'none';
+    uploadBtn.style.display = 'none';
+    captureBtn.style.display = 'block';
+    
+    navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+      .then((mediaStream) => {
+        stream = mediaStream;
+        cameraPreview.srcObject = stream;
+      })
+      .catch((err) => {
+        console.error("Camera error:", err);
+        alert("Could not access camera. Please check permissions.");
+        avatarModal.style.display = 'none';
+      });
+  }
+  
+  function stopCamera() {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      cameraPreview.srcObject = null;
+      stream = null;
+    }
+  }
+
   function initBoardFromSave(savedGrid) {
     grid = savedGrid;
     renderBoard();
@@ -453,10 +838,12 @@
     localStorage.setItem('puzzleQuestLastGame', JSON.stringify(gameState));
     
     // Also update Firebase
-    database.ref('scores/' + playerName).set({
-      score: score,
-      updatedAt: firebase.database.ServerValue.TIMESTAMP
-    });
+    if (score > 0) {
+      database.ref('scores/' + playerName).set({
+        score: score,
+        updatedAt: firebase.database.ServerValue.TIMESTAMP
+      });
+    }
   }
 
   // Name entry handling
@@ -465,6 +852,7 @@
     buttonSound.play();
     startGame();
   });
+  
   nameInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
       buttonSound.currentTime = 0;
@@ -479,7 +867,7 @@
     
     // Save name to localStorage
     localStorage.setItem('puzzleQuestPlayerName', playerName);
-    playerNameDisplay.textContent = `Player: ${playerName}`;
+    playerNameDisplay.textContent = playerName;
     
     // Hide name modal and show game
     nameModal.style.display = 'none';
@@ -634,19 +1022,46 @@
   function removeMatchesAndCollapse(matches) {
     if (matches.length === 0) return false;
     
+    // Play match sound
     matchSound.currentTime = 0;
     matchSound.play();
     
-    matches.forEach(({ r, c }) => (grid[r][c] = null));
-    updateScore(matches.length * 10);
+    // Add explosion effects and mark tiles as matched
+    matches.forEach(({ r, c }) => {
+      const tile = board.querySelector(`.tile[data-row="${r}"][data-col="${c}"]`);
+      if (tile) {
+        tile.classList.add('matched');
+        
+        // Add explosion effect
+        const explosion = document.createElement('div');
+        explosion.className = 'explosion';
+        tile.appendChild(explosion);
+        
+        // Play explosion sound for each match
+        setTimeout(() => {
+          explosionSound.currentTime = 0;
+          explosionSound.play();
+        }, 100);
+      }
+    });
+    
+    // Update score after animation starts
+    setTimeout(() => {
+      matches.forEach(({ r, c }) => (grid[r][c] = null));
+      updateScore(matches.length * 10);
 
-    for (let c = 0; c < COLS; c++) {
-      let newCol = [];
-      for (let r = ROWS - 1; r >= 0; r--) if (grid[r][c] !== null) newCol.push(grid[r][c]);
-      while (newCol.length < ROWS) newCol.push(Math.floor(Math.random() * COLORS_COUNT));
-      for (let r = ROWS - 1, i = 0; r >= 0; r--, i++) grid[r][c] = newCol[i];
-    }
-    renderBoard();
+      // Collapse and refill after animation completes
+      setTimeout(() => {
+        for (let c = 0; c < COLS; c++) {
+          let newCol = [];
+          for (let r = ROWS - 1; r >= 0; r--) if (grid[r][c] !== null) newCol.push(grid[r][c]);
+          while (newCol.length < ROWS) newCol.push(Math.floor(Math.random() * COLORS_COUNT));
+          for (let r = ROWS - 1, i = 0; r >= 0; r--, i++) grid[r][c] = newCol[i];
+        }
+        renderBoard();
+      }, 300);
+    }, 100);
+    
     return true;
   }
 
@@ -699,8 +1114,9 @@
     const matches = findMatches();
     if (matches.length === 0) return;
     removeMatchesAndCollapse(matches);
-    setTimeout(chainRemove, 350);
+    setTimeout(chainRemove, 800); // Longer delay to allow animations to complete
   }
+
 
   // Event listeners
   resetBtn.onclick = () => {
