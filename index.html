@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
 <title>Puzzle Quest</title>
 <style>
-  /* Styling same as previous example for brevity */
   /* Reset */
   * { box-sizing: border-box; }
   html, body {
@@ -55,11 +54,16 @@
   #score-board {
     margin: 4px 0 8px;
     font-weight: 700;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     text-align: center;
     color: #ffb86c;
     text-shadow: 0 0 4px #ffb86c99;
     user-select: none;
+    line-height: 1.4;
+  }
+  #score-board span {
+    font-size: 0.9rem;
+    color: #bb86fc;
   }
   #board {
     flex-grow: 1;
@@ -209,6 +213,61 @@
     box-shadow: 0 6px 14px #9a6fffcc;
     outline: none;
   }
+  .celebrate {
+    animation: pulse 0.5s ease 3;
+  }
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+  #name-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+  }
+  #name-form {
+    background: #1e1e2f;
+    padding: 24px;
+    border-radius: 16px;
+    width: 300px;
+    text-align: center;
+  }
+  #name-form h2 {
+    margin-top: 0;
+    color: #bb86fc;
+  }
+  #name-input {
+    width: 100%;
+    padding: 12px;
+    margin: 16px 0;
+    border: 2px solid #bb86fc;
+    border-radius: 8px;
+    background: #2a2a44;
+    color: white;
+    font-size: 1rem;
+  }
+  #name-submit {
+    background: #bb86fc;
+    color: #121217;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  #name-submit:hover {
+    background: #9a6fff;
+  }
   @media (max-width: 400px) {
     #game-container {
       width: 320px;
@@ -219,7 +278,7 @@
       font-size: 1.6rem;
     }
     #score-board {
-      font-size: 1.1rem;
+      font-size: 1rem;
     }
     button {
       font-size: 0.9rem;
@@ -236,6 +295,9 @@
     #leaderboard-modal {
       width: 90vw;
     }
+    #name-form {
+      width: 90vw;
+    }
   }
 </style>
 <!-- Firebase scripts -->
@@ -243,13 +305,21 @@
 <script src="https://www.gstatic.com/firebasejs/9.18.0/firebase-database-compat.js"></script>
 </head>
 <body>
-<div id="game-container" aria-label="Puzzle Quest game">
+<div id="name-modal">
+  <div id="name-form">
+    <h2>Enter Your Name</h2>
+    <input type="text" id="name-input" placeholder="Player name" maxlength="20" autofocus>
+    <button id="name-submit">Start Game</button>
+  </div>
+</div>
+
+<div id="game-container" aria-label="Puzzle Quest game" style="display: none;">
   <div id="player-name" aria-live="polite" aria-atomic="true"></div>
   <header>
     <h1>Puzzle Quest</h1>
     <p>Match 3 or more tiles by swapping adjacent ones!</p>
   </header>
-  <div id="score-board">Score: 0</div>
+  <div id="score-board">Score: 0<br><span>High Score: 0</span></div>
   <div id="board" aria-label="Game board, 6 by 6 grid" tabindex="0"></div>
   <div id="controls">
     <button id="reset-btn" aria-label="Reset game">Reset Game</button>
@@ -274,31 +344,38 @@
 
 <script>
 (() => {
-  // Replace with your Firebase config
+  // Firebase config
   const firebaseConfig = {
-  apiKey: "AIzaSyDexnxE8BAytVuwp8QlqTGdqp-T8TvT-JI",
-  authDomain: "puzzlequestgame-2b885.firebaseapp.com",
-  databaseURL: "https://puzzlequestgame-2b885-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "puzzlequestgame-2b885",
-  storageBucket: "puzzlequestgame-2b885.firebasestorage.app",
-  messagingSenderId: "853619803651",
-  appId: "1:853619803651:web:1d5be33744a40562ad7036"
-};
+    apiKey: "AIzaSyDexnxE8BAytVuwp8QlqTGdqp-T8TvT-JI",
+    authDomain: "puzzlequestgame-2b885.firebaseapp.com",
+    databaseURL: "https://puzzlequestgame-2b885-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "puzzlequestgame-2b885",
+    storageBucket: "puzzlequestgame-2b885.firebasestorage.app",
+    messagingSenderId: "853619803651",
+    appId: "1:853619803651:web:1d5be33744a40562ad7036"
+  };
   firebase.initializeApp(firebaseConfig);
   const database = firebase.database();
 
-  const playerName = localStorage.getItem('puzzleQuestPlayerName') || 'Player';
-  document.getElementById('player-name').textContent = `Player: ${playerName}`;
-
+  // Game constants
   const ROWS = 6;
   const COLS = 6;
   const COLORS_COUNT = 6;
   const fruitEmojis = ['🍎', '🍊', '🥭', '🍓', '🍌', '🍑'];
 
+  // Game state
   let grid = [];
   let selectedTile = null;
   let score = 0;
+  let highScore = 0;
+  let playerName = 'Player';
 
+  // DOM elements
+  const nameModal = document.getElementById('name-modal');
+  const nameInput = document.getElementById('name-input');
+  const nameSubmit = document.getElementById('name-submit');
+  const gameContainer = document.getElementById('game-container');
+  const playerNameDisplay = document.getElementById('player-name');
   const scoreBoard = document.getElementById('score-board');
   const board = document.getElementById('board');
   const resetBtn = document.getElementById('reset-btn');
@@ -306,6 +383,81 @@
   const leaderboardModal = document.getElementById('leaderboard-modal');
   const leaderboardScores = document.getElementById('leaderboard-scores');
   const closeLeaderboardBtn = document.getElementById('close-leaderboard');
+
+  // Initialize game when page loads
+  window.addEventListener('DOMContentLoaded', () => {
+    const savedName = localStorage.getItem('puzzleQuestPlayerName');
+    if (savedName) {
+      // If we have a saved name, skip the name modal
+      playerName = savedName;
+      playerNameDisplay.textContent = `Player: ${playerName}`;
+      nameModal.style.display = 'none';
+      gameContainer.style.display = 'flex';
+      initGame();
+    } else {
+      // Show name modal if no name is saved
+      nameModal.style.display = 'flex';
+      nameInput.focus();
+    }
+  });
+
+  // Name entry handling
+  nameSubmit.addEventListener('click', startGame);
+  nameInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') startGame();
+  });
+
+  function startGame() {
+    playerName = nameInput.value.trim() || 'Player';
+    if (playerName.length > 20) playerName = playerName.substring(0, 20);
+    
+    // Save name to localStorage
+    localStorage.setItem('puzzleQuestPlayerName', playerName);
+    playerNameDisplay.textContent = `Player: ${playerName}`;
+    
+    // Hide name modal and show game
+    nameModal.style.display = 'none';
+    gameContainer.style.display = 'flex';
+    
+    // Initialize game
+    initGame();
+  }
+
+  // Score storage functions
+  function getStoredHighScore() {
+    return parseInt(localStorage.getItem('puzzleQuestHighScore')) || 0;
+  }
+
+  function updateStoredHighScore(newScore) {
+    localStorage.setItem('puzzleQuestHighScore', newScore.toString());
+  }
+
+  function getLocalScores() {
+    const saved = localStorage.getItem('puzzleQuestLocalScores');
+    return saved ? JSON.parse(saved) : [];
+  }
+
+  function updateLocalScores(newScore) {
+    const scores = getLocalScores();
+    scores.unshift({
+      score: newScore,
+      date: new Date().toISOString()
+    });
+    // Keep only last 10 scores
+    const updatedScores = scores.slice(0, 10);
+    localStorage.setItem('puzzleQuestLocalScores', JSON.stringify(updatedScores));
+    return updatedScores;
+  }
+
+  function initGame() {
+    highScore = getStoredHighScore();
+    updateScoreDisplay();
+    initBoard();
+  }
+
+  function updateScoreDisplay() {
+    scoreBoard.innerHTML = `Score: ${score}<br><span>High Score: ${highScore}</span>`;
+  }
 
   // Tile creation
   function createTile(r, c, colorIdx) {
@@ -338,8 +490,8 @@
         do {
           color = Math.floor(Math.random() * COLORS_COUNT);
         } while (
-          c >= 2 && color === row[c - 1] && color === row[c - 2] ||
-          r >= 2 && color === grid[r - 1][c] && color === grid[r - 2][c]
+          (c >= 2 && color === row[c - 1] && color === row[c - 2]) ||
+          (r >= 2 && color === grid[r - 1][c] && color === grid[r - 2][c])
         );
         row.push(color);
       }
@@ -347,7 +499,7 @@
     }
     renderBoard();
     score = 0;
-    updateScore(0);
+    updateScoreDisplay();
     selectedTile = null;
   }
 
@@ -360,15 +512,29 @@
     }
   }
 
-  // Score update and firebase update
+  // Score update
   function updateScore(points) {
     score += points;
     if (score < 0) score = 0;
-    scoreBoard.textContent = `Score: ${score}`;
+    
+    const beatHighScore = score > highScore;
+    if (beatHighScore) {
+      highScore = score;
+      updateStoredHighScore(highScore);
+      scoreBoard.classList.add('celebrate');
+      setTimeout(() => scoreBoard.classList.remove('celebrate'), 1500);
+    }
+    
+    updateScoreDisplay();
+    
+    // Update Firebase
     database.ref('scores/' + playerName).set({
       score: score,
       updatedAt: firebase.database.ServerValue.TIMESTAMP
     });
+    
+    // Update local scores
+    updateLocalScores(score);
   }
 
   // Helper functions
@@ -500,20 +666,29 @@
     setTimeout(chainRemove, 350);
   }
 
+  // Event listeners
   resetBtn.onclick = () => {
     deselectTile();
-    updateScore(-score); // reset score to 0
+    score = 0;
+    updateScoreDisplay();
     initBoard();
   };
 
   leaderboardBtn.onclick = () => {
-    // Load all scores and show leaderboard modal
+    // Show both global and local scores
     database.ref('scores').orderByChild('score').limitToLast(10).once('value', snapshot => {
-      const data = snapshot.val() || {};
-      const scores = Object.entries(data)
+      const globalData = snapshot.val() || {};
+      const globalScores = Object.entries(globalData)
         .map(([key, val]) => ({ name: key, score: val.score || 0 }))
         .sort((a, b) => b.score - a.score);
-      renderLeaderboard(scores);
+      
+      const localScores = getLocalScores().map(entry => ({
+        name: playerName,
+        score: entry.score,
+        date: new Date(entry.date).toLocaleDateString()
+      }));
+      
+      renderLeaderboard(globalScores, localScores);
       leaderboardModal.classList.add('show');
       leaderboardModal.setAttribute('aria-hidden', 'false');
       leaderboardModal.focus();
@@ -525,38 +700,60 @@
     leaderboardModal.setAttribute('aria-hidden', 'true');
   };
 
-  // Save current score on every update
-  // We'll override updateScore to also sync Firebase
-  const originalUpdateScore = updateScore;
-  updateScore = function(points){
-    originalUpdateScore(points);
-    database.ref('scores/' + playerName).set({
-      score: score,
-      updatedAt: firebase.database.ServerValue.TIMESTAMP
-    });
-  };
-
-  function renderLeaderboard(scores) {
+  function renderLeaderboard(globalScores, localScores) {
     leaderboardScores.innerHTML = '';
-    if (scores.length === 0) {
+    
+    // Add global leaderboard section
+    const globalHeader = document.createElement('li');
+    globalHeader.innerHTML = '<strong style="width:100%; text-align:center; display:block; margin: 8px 0;">Global Leaderboard</strong>';
+    leaderboardScores.appendChild(globalHeader);
+    
+    if (globalScores.length === 0) {
       const li = document.createElement('li');
-      li.textContent = 'No scores recorded yet.';
+      li.textContent = 'No global scores yet';
       li.style.fontStyle = 'italic';
+      li.style.textAlign = 'center';
       leaderboardScores.appendChild(li);
-      return;
+    } else {
+      globalScores.forEach(({name, score}, index) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <div>${index + 1}. ${name}</div>
+          <div>${score}</div>
+        `;
+        leaderboardScores.appendChild(li);
+      });
     }
-    scores.forEach(({name, score}, index) => {
+    
+    // Add separator
+    const separator = document.createElement('li');
+    separator.style.height = '1px';
+    separator.style.backgroundColor = '#555577';
+    separator.style.margin = '8px 0';
+    leaderboardScores.appendChild(separator);
+    
+    // Add personal scores section
+    const personalHeader = document.createElement('li');
+    personalHeader.innerHTML = '<strong style="width:100%; text-align:center; display:block; margin: 8px 0;">Your Recent Scores</strong>';
+    leaderboardScores.appendChild(personalHeader);
+    
+    if (localScores.length === 0) {
       const li = document.createElement('li');
-      li.textContent = `${index + 1}. ${name}`;
-      const span = document.createElement('span');
-      span.textContent = score;
-      li.appendChild(span);
+      li.textContent = 'No personal scores yet';
+      li.style.fontStyle = 'italic';
+      li.style.textAlign = 'center';
       leaderboardScores.appendChild(li);
-    });
+    } else {
+      localScores.forEach(({name, score, date}, index) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <div>${index + 1}. ${score}</div>
+          <small style="font-size: 0.7rem; opacity: 0.7;">${date}</small>
+        `;
+        leaderboardScores.appendChild(li);
+      });
+    }
   }
-
-  initBoard();
-
 })();
 </script>
 </body>
