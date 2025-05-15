@@ -257,13 +257,14 @@
     line-height: 1.3;
   }
   
+  /* Leaderboard Modal */
   #leaderboard-modal {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) scale(0);
     width: 320px;
-    max-height: 80vh;
+    height: 80vh;
     background: #1e1e2f;
     border-radius: 16px;
     box-shadow: 0 0 20px #bb86fccc;
@@ -275,9 +276,11 @@
     flex-direction: column;
     overflow: hidden;
   }
+  
   #leaderboard-modal.show {
     transform: translate(-50%, -50%) scale(1);
   }
+  
   #leaderboard-header {
     background: #3b3d5c;
     padding: 14px;
@@ -288,27 +291,76 @@
     border-top-right-radius: 16px;
     user-select: none;
   }
+  
+  #leaderboard-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  #leaderboard-tabs {
+    display: flex;
+    background: #2a2a44;
+  }
+  
+  .leaderboard-tab {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+  }
+  
+  .leaderboard-tab.active {
+    border-bottom: 2px solid #bb86fc;
+    color: #bb86fc;
+  }
+  
   #leaderboard-list {
     flex-grow: 1;
     overflow-y: auto;
     padding: 8px 16px;
   }
+  
   #leaderboard-list ul {
     list-style: none;
     margin: 0;
     padding: 0;
   }
+  
   #leaderboard-list li {
-    padding: 8px 4px;
+    padding: 12px 8px;
     border-bottom: 1px solid #555577;
     font-size: 1.1rem;
     display: flex;
-    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
     font-weight: 600;
   }
+  
   #leaderboard-list li:last-child {
     border-bottom: none;
   }
+  
+  .leaderboard-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #bb86fc;
+  }
+  
+  .leaderboard-name {
+    flex-grow: 1;
+  }
+  
+  .leaderboard-score {
+    color: #ffb86c;
+    min-width: 60px;
+    text-align: right;
+  }
+  
   #leaderboard-footer {
     background: #3b3d5c;
     padding: 10px 14px;
@@ -317,25 +369,122 @@
     border-bottom-left-radius: 16px;
     border-bottom-right-radius: 16px;
   }
-  #close-leaderboard {
-    background: #bb86fc;
-    border: none;
-    border-radius: 12px;
-    padding: 8px 16px;
-    font-weight: 700;
-    cursor: pointer;
-    color: #121217;
-    box-shadow: 0 4px 10px #bb86fcaa;
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  
+  /* Chat Modal */
+  #chat-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 320px;
+    height: 80vh;
+    background: #1e1e2f;
+    border-radius: 16px;
+    box-shadow: 0 0 20px #bb86fccc;
+    color: #eee;
+    z-index: 2000;
+    transition: transform 0.3s ease;
     user-select: none;
-  }
-  #close-leaderboard:hover,
-  #close-leaderboard:focus {
-    background: #9a6fff;
-    box-shadow: 0 6px 14px #9a6fffcc;
-    outline: none;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
   
+  #chat-modal.show {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  
+  #chat-header {
+    background: #3b3d5c;
+    padding: 14px;
+    font-weight: 700;
+    font-size: 1.3rem;
+    text-align: center;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    user-select: none;
+  }
+  
+  #chat-messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .chat-message {
+    background: #2a2a44;
+    border-radius: 12px;
+    padding: 8px 12px;
+    max-width: 80%;
+  }
+  
+  .chat-message.own {
+    align-self: flex-end;
+    background: #bb86fc;
+    color: #121217;
+  }
+  
+  .chat-message.other {
+    align-self: flex-start;
+  }
+  
+  .message-sender {
+    font-weight: bold;
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .message-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  
+  .message-text {
+    word-wrap: break-word;
+  }
+  
+  .message-time {
+    font-size: 0.7rem;
+    opacity: 0.7;
+    text-align: right;
+    margin-top: 4px;
+  }
+  
+  #chat-input-container {
+    display: flex;
+    padding: 10px;
+    background: #2a2a44;
+    gap: 8px;
+  }
+  
+  #chat-input {
+    flex-grow: 1;
+    padding: 10px;
+    border-radius: 20px;
+    border: none;
+    background: #3b3d5c;
+    color: white;
+  }
+  
+  #chat-send {
+    background: #bb86fc;
+    color: #121217;
+    border: none;
+    border-radius: 20px;
+    padding: 0 15px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  /* Other modals */
   #rename-modal, #avatar-modal {
     position: fixed;
     top: 0;
@@ -430,7 +579,7 @@
       font-size: 0.7rem;
     }
     
-    #leaderboard-modal {
+    #leaderboard-modal, #chat-modal {
       width: 90vw;
     }
     
@@ -477,6 +626,7 @@
   <div id="controls">
     <button id="reset-btn" aria-label="Reset game">Reset Game</button>
     <button id="leaderboard-btn" aria-label="Show Leaderboard">Leaderboard</button>
+    <button id="chat-btn" aria-label="Global Chat">Global Chat</button>
   </div>
   
   <div id="instructions">
@@ -488,11 +638,30 @@
 <!-- Leaderboard Modal -->
 <div id="leaderboard-modal" role="dialog" aria-modal="true" aria-labelledby="leaderboard-header" tabindex="-1" aria-hidden="true">
   <div id="leaderboard-header">Leaderboard</div>
-  <div id="leaderboard-list" tabindex="0">
-    <ul id="leaderboard-scores"></ul>
+  <div id="leaderboard-content">
+    <div id="leaderboard-tabs">
+      <div class="leaderboard-tab active" data-tab="global">Global</div>
+      <div class="leaderboard-tab" data-tab="friends">Friends</div>
+    </div>
+    <div id="leaderboard-list">
+      <ul id="leaderboard-scores"></ul>
+    </div>
   </div>
   <div id="leaderboard-footer">
     <button id="close-leaderboard">Close</button>
+  </div>
+</div>
+
+<!-- Chat Modal -->
+<div id="chat-modal" role="dialog" aria-modal="true" aria-labelledby="chat-header" tabindex="-1" aria-hidden="true">
+  <div id="chat-header">Global Chat</div>
+  <div id="chat-messages"></div>
+  <div id="chat-input-container">
+    <input type="text" id="chat-input" placeholder="Type your message..." maxlength="200">
+    <button id="chat-send">Send</button>
+  </div>
+  <div id="chat-footer">
+    <button id="close-chat">Close</button>
   </div>
 </div>
 
@@ -560,6 +729,7 @@
   let playerName = 'Player';
   let lastGameState = null;
   let stream = null;
+  let currentLeaderboardTab = 'global';
 
   // DOM elements
   const nameModal = document.getElementById('name-modal');
@@ -574,9 +744,16 @@
   const board = document.getElementById('board');
   const resetBtn = document.getElementById('reset-btn');
   const leaderboardBtn = document.getElementById('leaderboard-btn');
+  const chatBtn = document.getElementById('chat-btn');
   const leaderboardModal = document.getElementById('leaderboard-modal');
+  const leaderboardContent = document.getElementById('leaderboard-content');
   const leaderboardScores = document.getElementById('leaderboard-scores');
   const closeLeaderboardBtn = document.getElementById('close-leaderboard');
+  const chatModal = document.getElementById('chat-modal');
+  const chatMessages = document.getElementById('chat-messages');
+  const chatInput = document.getElementById('chat-input');
+  const chatSend = document.getElementById('chat-send');
+  const closeChatBtn = document.getElementById('close-chat');
   const renameModal = document.getElementById('rename-modal');
   const renameInput = document.getElementById('rename-input');
   const renameCancel = document.getElementById('rename-cancel');
@@ -592,6 +769,7 @@
   const renameBtn = document.getElementById('rename-btn');
   const fileInput = document.getElementById('file-input');
   const avatarModalTitle = document.getElementById('avatar-modal-title');
+  const leaderboardTabs = document.querySelectorAll('.leaderboard-tab');
 
   // Sound effects
   const swapSound = document.getElementById('swap-sound');
@@ -642,7 +820,160 @@
       nameModal.style.display = 'flex';
       nameInput.focus();
     }
+    
+    // Initialize chat
+    initChat();
+    
+    // Load leaderboard
+    loadLeaderboard('global');
   });
+
+  // Leaderboard tabs
+  leaderboardTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      buttonSound.currentTime = 0;
+      buttonSound.play();
+      
+      leaderboardTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentLeaderboardTab = tab.dataset.tab;
+      loadLeaderboard(currentLeaderboardTab);
+    });
+  });
+
+  function loadLeaderboard(type) {
+    if (type === 'global') {
+      database.ref('scores').orderByChild('score').limitToLast(50).once('value', snapshot => {
+        const data = snapshot.val() || {};
+        const scores = Object.entries(data)
+          .map(([key, val]) => ({ 
+            name: key, 
+            score: val.score || 0,
+            avatar: val.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(key)}&background=bb86fc&color=121217`
+          }))
+          .sort((a, b) => b.score - a.score);
+        renderLeaderboard(scores);
+      });
+    } else {
+      // For friends tab (could be implemented later)
+      renderLeaderboard([]);
+    }
+  }
+
+  function renderLeaderboard(scores) {
+    leaderboardScores.innerHTML = '';
+    
+    if (scores.length === 0) {
+      const li = document.createElement('li');
+      li.textContent = currentLeaderboardTab === 'global' 
+        ? 'No scores recorded yet.' 
+        : 'No friends to display.';
+      li.style.fontStyle = 'italic';
+      li.style.textAlign = 'center';
+      li.style.justifyContent = 'center';
+      leaderboardScores.appendChild(li);
+      return;
+    }
+    
+    scores.forEach(({name, score, avatar}, index) => {
+      const li = document.createElement('li');
+      
+      const avatarImg = document.createElement('img');
+      avatarImg.src = avatar;
+      avatarImg.className = 'leaderboard-avatar';
+      avatarImg.alt = name;
+      
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'leaderboard-name';
+      nameSpan.textContent = `${index + 1}. ${name}`;
+      
+      const scoreSpan = document.createElement('span');
+      scoreSpan.className = 'leaderboard-score';
+      scoreSpan.textContent = score;
+      
+      li.appendChild(avatarImg);
+      li.appendChild(nameSpan);
+      li.appendChild(scoreSpan);
+      
+      leaderboardScores.appendChild(li);
+    });
+  }
+
+  // Chat functionality
+  function initChat() {
+    // Load last 50 messages
+    database.ref('chat').limitToLast(50).on('value', snapshot => {
+      chatMessages.innerHTML = '';
+      const messages = snapshot.val() || {};
+      
+      Object.entries(messages).forEach(([key, msg]) => {
+        addChatMessage(msg);
+      });
+      
+      // Scroll to bottom
+      setTimeout(() => {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }, 100);
+    });
+  }
+  
+  function addChatMessage(msg) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${msg.sender === playerName ? 'own' : 'other'}`;
+    
+    const senderDiv = document.createElement('div');
+    senderDiv.className = 'message-sender';
+    
+    const avatarImg = document.createElement('img');
+    avatarImg.src = msg.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.sender)}&background=bb86fc&color=121217`;
+    avatarImg.className = 'message-avatar';
+    avatarImg.alt = msg.sender;
+    
+    senderDiv.appendChild(avatarImg);
+    senderDiv.appendChild(document.createTextNode(msg.sender));
+    
+    const textDiv = document.createElement('div');
+    textDiv.className = 'message-text';
+    textDiv.textContent = msg.text;
+    
+    const timeDiv = document.createElement('div');
+    timeDiv.className = 'message-time';
+    timeDiv.textContent = formatTime(msg.timestamp);
+    
+    messageDiv.appendChild(senderDiv);
+    messageDiv.appendChild(textDiv);
+    messageDiv.appendChild(timeDiv);
+    
+    chatMessages.appendChild(messageDiv);
+  }
+  
+  function formatTime(timestamp) {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  
+  chatSend.addEventListener('click', sendMessage);
+  chatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      sendMessage();
+    }
+  });
+  
+  function sendMessage() {
+    const message = chatInput.value.trim();
+    if (message && playerName) {
+      const newMessage = {
+        sender: playerName,
+        text: message,
+        avatar: localStorage.getItem('puzzleQuestPlayerAvatar') || `https://ui-avatars.com/api/?name=${encodeURIComponent(playerName)}&background=bb86fc&color=121217`,
+        timestamp: Date.now()
+      };
+      
+      database.ref('chat').push(newMessage);
+      chatInput.value = '';
+    }
+  }
 
   // Fullscreen toggle
   fullscreenBtn.addEventListener('click', toggleFullscreen);
@@ -724,6 +1055,7 @@
     if (score > 0) {
       database.ref('scores/' + playerName).set({
         score: score,
+        avatar: localStorage.getItem('puzzleQuestPlayerAvatar') || `https://ui-avatars.com/api/?name=${encodeURIComponent(playerName)}&background=bb86fc&color=121217`,
         updatedAt: firebase.database.ServerValue.TIMESTAMP
       });
     }
@@ -777,6 +1109,14 @@
     playerAvatar.src = imageData;
     localStorage.setItem('puzzleQuestPlayerAvatar', imageData);
     
+    // Update Firebase with new avatar
+    if (score > 0) {
+      database.ref('scores/' + playerName).update({
+        avatar: imageData,
+        updatedAt: firebase.database.ServerValue.TIMESTAMP
+      });
+    }
+    
     stopCamera();
     avatarModal.style.display = 'none';
   });
@@ -787,6 +1127,15 @@
     
     playerAvatar.src = avatarImagePreview.src;
     localStorage.setItem('puzzleQuestPlayerAvatar', avatarImagePreview.src);
+    
+    // Update Firebase with new avatar
+    if (score > 0) {
+      database.ref('scores/' + playerName).update({
+        avatar: avatarImagePreview.src,
+        updatedAt: firebase.database.ServerValue.TIMESTAMP
+      });
+    }
+    
     avatarModal.style.display = 'none';
   });
   
@@ -841,6 +1190,7 @@
     if (score > 0) {
       database.ref('scores/' + playerName).set({
         score: score,
+        avatar: localStorage.getItem('puzzleQuestPlayerAvatar') || `https://ui-avatars.com/api/?name=${encodeURIComponent(playerName)}&background=bb86fc&color=121217`,
         updatedAt: firebase.database.ServerValue.TIMESTAMP
       });
     }
@@ -1117,7 +1467,6 @@
     setTimeout(chainRemove, 800); // Longer delay to allow animations to complete
   }
 
-
   // Event listeners
   resetBtn.onclick = () => {
     buttonSound.currentTime = 0;
@@ -1132,16 +1481,9 @@
   leaderboardBtn.onclick = () => {
     buttonSound.currentTime = 0;
     buttonSound.play();
-    database.ref('scores').orderByChild('score').limitToLast(10).once('value', snapshot => {
-      const data = snapshot.val() || {};
-      const scores = Object.entries(data)
-        .map(([key, val]) => ({ name: key, score: val.score || 0 }))
-        .sort((a, b) => b.score - a.score);
-      renderLeaderboard(scores);
-      leaderboardModal.classList.add('show');
-      leaderboardModal.setAttribute('aria-hidden', 'false');
-      leaderboardModal.focus();
-    });
+    leaderboardModal.classList.add('show');
+    leaderboardModal.setAttribute('aria-hidden', 'false');
+    leaderboardModal.focus();
   };
 
   closeLeaderboardBtn.onclick = () => {
@@ -1151,24 +1493,20 @@
     leaderboardModal.setAttribute('aria-hidden', 'true');
   };
 
-  function renderLeaderboard(scores) {
-    leaderboardScores.innerHTML = '';
-    if (scores.length === 0) {
-      const li = document.createElement('li');
-      li.textContent = 'No scores recorded yet.';
-      li.style.fontStyle = 'italic';
-      leaderboardScores.appendChild(li);
-      return;
-    }
-    scores.forEach(({name, score}, index) => {
-      const li = document.createElement('li');
-      li.textContent = `${index + 1}. ${name}`;
-      const span = document.createElement('span');
-      span.textContent = score;
-      li.appendChild(span);
-      leaderboardScores.appendChild(li);
-    });
-  }
+  chatBtn.onclick = () => {
+    buttonSound.currentTime = 0;
+    buttonSound.play();
+    chatModal.classList.add('show');
+    chatModal.setAttribute('aria-hidden', 'false');
+    chatInput.focus();
+  };
+
+  closeChatBtn.onclick = () => {
+    buttonSound.currentTime = 0;
+    buttonSound.play();
+    chatModal.classList.remove('show');
+    chatModal.setAttribute('aria-hidden', 'true');
+  };
 
   // Save game when leaving the page
   window.addEventListener('beforeunload', () => {
