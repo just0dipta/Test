@@ -2381,15 +2381,7 @@
   }
 
   function swapTiles(r1, c1, r2, c2) {
-    if (extraMoves > 0) {
-      extraMoves--;
-    } else if (score < 5) {
-      alert("Not enough points to swap! You need at least 5 points.");
-      return false;
-    } else {
-      updateScore(-5); // Deduct 5 points for each swap
-    }
-    
+    // No point deduction, swaps are always free
     swapSound.currentTime = 0;
     swapSound.play();
     
@@ -2410,7 +2402,7 @@
     t2.style.borderColor = themes[currentTheme].colors[grid[r2][c2]];
     
     return true;
-  }
+}
 
   // Match finding
   function findMatches() {
@@ -2521,17 +2513,16 @@
       if (r === selectedTile.r && c === selectedTile.c) {
         deselectTile();
       } else if (isAdjacent(r, c, selectedTile.r, selectedTile.c)) {
-        if (swapTiles(r, c, selectedTile.r, selectedTile.c)) {
-          if (findMatches().length === 0) {
-            setTimeout(() => {
-              swapTiles(r, c, selectedTile.r, selectedTile.c);
-              deselectTile();
-            }, 300);
-          } else {
-            deselectTile();
-            chainRemove();
-          }
-        }
+        swapTiles(r, c, selectedTile.r, selectedTile.c);
+if (findMatches().length === 0) {
+    setTimeout(() => {
+        swapTiles(r, c, selectedTile.r, selectedTile.c); // Swap back if no match
+        deselectTile();
+    }, 300);
+} else {
+    deselectTile();
+    chainRemove();
+}
       } else {
         deselectTile();
         selectSound.currentTime = 0;
